@@ -1,0 +1,616 @@
+<title>Поиск товара Trust Way</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one working column. Queue of search requests → one request page (details, found options, actions). Owner adds Report (per-day timeline by hour) and People. */
+:root {
+  --bg: #f1f3f8; --surface: #ffffff; --surface-2: #f6f7fb; --fg: #131830; --muted: #5b6383; --line: #d8dcea;
+  --accent: #26369a; --accent-ink: #ffffff; --accent-soft: #e3e7f8;
+  --pos: #1c7448; --neg: #b3261e; --warn: #8f5a00;
+  --s-new: #26369a; --s-work: #8f5a00; --s-review: #6a3fb5; --s-done: #1c7448; --s-bad: #b3261e; --s-off: #6b7280;
+  --font: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1020; --surface: #161a2e; --surface-2: #1b2036; --fg: #e8eaf4; --muted: #9aa1c2; --line: #2a3050;
+    --accent: #9aa6ff; --accent-ink: #0d1020; --accent-soft: #232a4d; --pos: #5ccb8f; --neg: #ff8a80; --warn: #f2b85b;
+    --s-new: #9aa6ff; --s-work: #f2b85b; --s-review: #c4a6ff; --s-done: #5ccb8f; --s-bad: #ff8a80; --s-off: #9aa1c2; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1020; --surface: #161a2e; --surface-2: #1b2036; --fg: #e8eaf4; --muted: #9aa1c2; --line: #2a3050;
+  --accent: #9aa6ff; --accent-ink: #0d1020; --accent-soft: #232a4d; --pos: #5ccb8f; --neg: #ff8a80; --warn: #f2b85b;
+  --s-new: #9aa6ff; --s-work: #f2b85b; --s-review: #c4a6ff; --s-done: #5ccb8f; --s-bad: #ff8a80; --s-off: #9aa1c2; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.45;
+  padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px)); padding-block: 16px 56px; font-variant-numeric: tabular-nums; }
+.app { max-width: 980px; margin: 0 auto; display: grid; gap: 14px; }
+.top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.top h1 { margin: 0; font-size: 21px; font-weight: 700; }
+.top .who { color: var(--muted); font-size: 14px; }
+.spacer { flex: 1; }
+.role { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.lang { display: inline-flex; border: 1.5px solid var(--line); border-radius: 9px; overflow: hidden; }
+.lang button { font: inherit; font-size: 13px; border: 0; padding: 5px 10px; background: var(--surface); color: var(--fg); cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; scrollbar-width: none; }
+.tab { flex: none; font: inherit; font-weight: 600; border: 0; background: transparent; color: var(--muted); padding: 9px 16px; border-radius: 9px; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .req:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; display: grid; gap: 10px; }
+.card h2 { margin: 0; font-size: 17px; font-weight: 650; }
+.sub { margin: 0; color: var(--muted); font-size: 14px; }
+.muted { color: var(--muted); } .small { font-size: 13px; } .pos { color: var(--pos); } .neg { color: var(--neg); } .warn { color: var(--warn); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 600; font-size: 14.5px; padding: 9px 15px; border-radius: 10px; border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.quiet { background: transparent; color: var(--muted); border-color: var(--line); }
+.btn.good { background: var(--pos); border-color: var(--pos); color: #fff; }
+.btn.bad { background: transparent; color: var(--neg); border-color: var(--neg); }
+.btn.small { padding: 6px 11px; font-size: 13.5px; font-weight: 500; }
+.btn:disabled { opacity: .5; cursor: default; }
+.link { font: inherit; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-weight: 500; }
+.grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.f { display: grid; gap: 4px; min-width: 0; } .f.wide { grid-column: 1 / -1; }
+.f label, .f .lbl { font-size: 13px; color: var(--muted); font-weight: 500; }
+input, select, textarea { font: inherit; font-size: 16px; width: 100%; min-width: 0; padding: 9px 11px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--fg); }
+textarea { resize: vertical; min-height: 80px; }
+input[type="file"] { font-size: 14px; padding: 7px; }
+.status { font-size: 13.5px; } .status.ok { color: var(--pos); } .status.err { color: var(--neg); }
+
+/* queue */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font: inherit; font-size: 13.5px; padding: 6px 12px; border-radius: 99px; border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.chip .n { font-family: var(--mono); font-size: 11.5px; opacity: .8; margin-left: 4px; }
+.list { display: grid; gap: 8px; }
+.req { display: grid; gap: 6px; text-align: left; font: inherit; color: inherit; width: 100%; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--st, var(--line)); border-radius: 12px; padding: 12px 14px; }
+.req:hover { border-color: var(--accent); border-left-color: var(--st, var(--accent)); }
+.req .h { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.req .h b { font-weight: 650; font-size: 15.5px; overflow-wrap: anywhere; }
+.code { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.meta b { color: var(--fg); font-weight: 600; }
+.st { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; color: var(--st); background: color-mix(in srgb, var(--st) 13%, transparent); white-space: nowrap; }
+.late { font-size: 12px; font-weight: 700; color: var(--neg); }
+.empty { color: var(--muted); padding: 18px 4px; text-align: center; }
+
+/* request page */
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14.5px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; overflow-wrap: anywhere; }
+.photos { display: flex; gap: 8px; flex-wrap: wrap; }
+.photos img { width: 92px; height: 92px; object-fit: cover; border-radius: 9px; border: 1px solid var(--line); display: block; }
+.tr { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; font-size: 14.5px; white-space: pre-wrap; }
+.tr .lbl { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); display: block; margin-bottom: 2px; }
+.opts { display: grid; gap: 10px; }
+.opt { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.opt img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.opt .noimg { width: 84px; height: 84px; border-radius: 8px; border: 1px dashed var(--line); display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.opt .t { font-weight: 600; overflow-wrap: anywhere; }
+.opt a { color: var(--accent); overflow-wrap: anywhere; font-size: 13.5px; }
+.log { display: grid; gap: 0; }
+.log .e { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.log .e:last-child { border-bottom: 0; }
+.log .t { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 2px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.notice { padding: 11px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+.notice.warn { border-color: var(--warn); color: var(--fg); }
+
+/* report */
+.kpis { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.kpi { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; display: grid; gap: 2px; min-width: 0; }
+.kpi .k { font-size: 12.5px; color: var(--muted); } .kpi .v { font-size: 22px; font-weight: 700; } .kpi .x { font-size: 12px; color: var(--muted); }
+.hours { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 2px; }
+.hours .c { height: 34px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); position: relative; }
+.hours .c.on { background: var(--accent); border-color: var(--accent); }
+.hours .c.on2 { background: color-mix(in srgb, var(--accent) 55%, var(--surface-2)); border-color: var(--accent); }
+.hours .c span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: var(--accent-ink); }
+.hlab { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 2px; font-family: var(--mono); font-size: 9.5px; color: var(--muted); text-align: center; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12.5px; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+.tbl { overflow-x: auto; }
+.gate { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px 20px; display: grid; gap: 8px; max-width: 560px; }
+.gate h2 { margin: 0; font-size: 19px; } .gate p { margin: 0; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .tab, .chip, .btn, .req { transition: background .12s, border-color .12s, color .12s; } }
+</style>
+
+<div class="app">
+  <div class="top">
+    <h1 id="h1">Поиск товара</h1><span class="who" id="who"></span><span class="role" id="role" hidden></span>
+    <span class="spacer"></span>
+    <div class="lang" role="group" aria-label="Язык / 语言"><button type="button" data-lang="ru" aria-pressed="true">RU</button><button type="button" data-lang="zh" aria-pressed="false">中文</button></div>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist" hidden></nav>
+  <div id="status" hidden></div>
+  <main id="main"><div class="gate"><h2>Загрузка…</h2><p>Подключаюсь к базе заявок. 正在连接…</p></div></main>
+</div>
+
+<script>
+/* ================================================================== */
+/*  Тексты: русский и китайский                                        */
+/* ================================================================== */
+const TX = {
+  ru: {
+    title: "Поиск товара", queue: "Заявки", report: "Отчёт", people: "Люди",
+    owner: "Владелец", ru: "Менеджер · Россия", cn: "Менеджер · Китай", none: "Без роли",
+    st_new: "Новая", st_work: "В поиске", st_review: "Ждёт оценки", st_rework: "Искать ещё", st_done: "Подошло", st_bad: "Не подошло", st_off: "Отменена",
+    f_active: "В работе", f_mine: "Мои", f_review: "Ждут оценки", f_closed: "Закрытые", f_all: "Все",
+    newReq: "+ Новая заявка", code: "Код клиента", what: "Что найти", qty: "Количество", price: "Желаемая цена", details: "Подробности", link: "Ссылка или пример", photos: "Фото",
+    create: "Отправить в Китай", cancel: "Отмена", save: "Сохранить", close: "Закрыть", back: "← Все заявки",
+    take: "Взять в работу", addOpt: "+ Добавить вариант", deliver: "Отправить варианты на оценку", accept: "Подошло", reject: "Не подошло", rework: "Искать ещё", cancelReq: "Отменить заявку",
+    optTitle: "Что нашли", optPrice: "Цена за шт, ¥", optMoq: "Мин. партия", optLead: "Срок производства", optLink: "Ссылка (1688, фабрика)", optNote: "Комментарий", optPhoto: "Фото",
+    options: "Найденные варианты", noOptions: "Вариантов пока нет.", history: "История заявки",
+    created: "создал(а) заявку", taken: "взял(а) в работу", optAdded: "добавил(а) вариант", delivered: "отправил(а) варианты на оценку", accepted: "оценил(а): подошло", rejected: "оценил(а): не подошло", reworked: "вернул(а): искать ещё", cancelled: "отменил(а) заявку",
+    createdBy: "Создал(а)", searcher: "Ищет", wait: "Ждёт", age: "Создана", comment: "Комментарий к оценке",
+    reworkWhy: "Что не так? Напишите, что искать дальше", rejectWhy: "Почему не подошло (необязательно)",
+    translate: "Перевести на русский", translating: "Перевожу…", trOf: "Перевод", trNo: "Перевод сейчас недоступен.",
+    late: "без ответа больше 24 ч", needRole: "Попросите владельца назначить вам роль", needRoleT: "Владелец назначает роль во вкладке «Люди». После этого здесь появятся заявки.",
+    period: "Период", today: "Сегодня", d7: "7 дней", d30: "30 дней",
+    rTaken: "Взял в работу", rDelivered: "Отправил варианты", rTakeT: "Среднее время до взятия", rSearchT: "Среднее время поиска", rOk: "Подошло с первого раза", rRework: "Возвращено «искать ещё»",
+    rCreated: "Создал заявок", rReviewT: "Среднее время оценки",
+    dayT: "День по часам", dayHint: "Время Китая. Каждая клетка — час; цифра — сколько действий.", first: "Первое действие", last: "Последнее действие", gap: "Самый долгий перерыв", noActs: "В этот день действий нет.",
+    nowT: "Сейчас", inQueue: "Ждут, пока возьмут", inWork: "В поиске", toReview: "Ждут оценки", lateList: "Без ответа больше 24 часов",
+    peopleT: "Люди и роли", peopleSub: "Каждый, кто открыл эту страницу, появляется здесь. Назначьте роль, чтобы человек начал работать.", lastSeen: "Был(а)",
+    saved: "Сохранено", errSave: "Не сохранилось. Проверьте интернет и попробуйте ещё раз.", errWhat: "Напишите, что нужно найти.", errOpt: "Напишите, что нашли.", errNoOpt: "Сначала добавьте хотя бы один вариант.",
+    you: "Вы", someone: "Сотрудник", min: "мин", h: "ч", d: "д", ago: "назад", sec: "только что", del: "Удалить", upload: "Загружаю фото…"
+  },
+  zh: {
+    title: "产品搜索", queue: "请求", report: "报告", people: "人员",
+    owner: "老板", ru: "经理 · 俄罗斯", cn: "经理 · 中国", none: "未分配角色",
+    st_new: "新请求", st_work: "搜索中", st_review: "待评估", st_rework: "需重新搜索", st_done: "已通过", st_bad: "未通过", st_off: "已取消",
+    f_active: "进行中", f_mine: "我的", f_review: "待评估", f_closed: "已关闭", f_all: "全部",
+    newReq: "+ 新请求", code: "客户编号", what: "要找什么", qty: "数量", price: "期望价格", details: "详细说明", link: "链接或样品", photos: "照片",
+    create: "发送到中国", cancel: "取消", save: "保存", close: "关闭", back: "← 全部请求",
+    take: "开始处理", addOpt: "+ 添加选项", deliver: "提交选项待评估", accept: "通过", reject: "不通过", rework: "继续寻找", cancelReq: "取消请求",
+    optTitle: "找到的产品", optPrice: "单价, ¥", optMoq: "最小起订量", optLead: "生产周期", optLink: "链接 (1688, 工厂)", optNote: "备注", optPhoto: "照片",
+    options: "找到的选项", noOptions: "暂无选项。", history: "请求记录",
+    created: "创建了请求", taken: "开始处理", optAdded: "添加了选项", delivered: "提交了选项待评估", accepted: "评估：通过", rejected: "评估：不通过", reworked: "退回：继续寻找", cancelled: "取消了请求",
+    createdBy: "创建人", searcher: "搜索人", wait: "等待", age: "创建于", comment: "评估备注",
+    reworkWhy: "哪里不对？写下需要继续找什么", rejectWhy: "不通过的原因（可选）",
+    translate: "翻译成中文", translating: "翻译中…", trOf: "翻译", trNo: "暂时无法翻译。",
+    late: "超过24小时未回复", needRole: "请让老板为您分配角色", needRoleT: "老板在「人员」页面分配角色，之后这里会显示请求。",
+    period: "时间段", today: "今天", d7: "7天", d30: "30天",
+    rTaken: "开始处理", rDelivered: "提交选项", rTakeT: "平均接单时间", rSearchT: "平均搜索时间", rOk: "一次通过", rRework: "被退回继续寻找",
+    rCreated: "创建请求", rReviewT: "平均评估时间",
+    dayT: "按小时查看", dayHint: "中国时间。每格一小时；数字为操作次数。", first: "第一次操作", last: "最后一次操作", gap: "最长间隔", noActs: "这天没有操作。",
+    nowT: "当前", inQueue: "等待接单", inWork: "搜索中", toReview: "待评估", lateList: "超过24小时未回复",
+    peopleT: "人员和角色", peopleSub: "打开此页面的人都会显示在这里。分配角色后即可开始工作。", lastSeen: "最近访问",
+    saved: "已保存", errSave: "保存失败，请检查网络后重试。", errWhat: "请写下要找什么。", errOpt: "请写下找到的产品。", errNoOpt: "请先添加至少一个选项。",
+    you: "我", someone: "同事", min: "分钟", h: "小时", d: "天", ago: "前", sec: "刚刚", del: "删除", upload: "正在上传照片…"
+  }
+};
+let LANG = (() => { try { return localStorage.getItem("tw-search-lang") || ""; } catch (e) { return ""; } })();
+const t = k => (TX[LANG || "ru"] || TX.ru)[k] ?? TX.ru[k] ?? k;
+
+/* ================================================================== */
+/*  Состояние                                                          */
+/* ================================================================== */
+const S = { db: null, user: null, assets: null, sample: null, myId: null, isOwner: false, role: "none", roles: {}, members: [], names: {},
+  reqs: [], events: [], opts: [], optUnsub: null, tab: "queue", open: null, filter: "active", form: null, oform: null, why: null,
+  rep: { period: "d7", day: "", person: "" }, msg: null, busy: false, trBusy: "" };
+const STAT = { new: "--s-new", work: "--s-work", review: "--s-review", rework: "--s-work", done: "--s-done", bad: "--s-bad", off: "--s-off" };
+const DAY = 864e5, H = 36e5;
+
+/* ---------- утилиты ---------- */
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+const TZ = "Asia/Shanghai";
+function parts(ms) { const p = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date(ms)); const o = {}; p.forEach(x => o[x.type] = x.value); if (o.hour === "24") o.hour = "00"; return o; }
+function dayKey(ms) { const o = parts(ms); return `${o.year}-${o.month}-${o.day}`; }
+function hourOf(ms) { return +parts(ms).hour; }
+function fmtTime(ms) { const o = parts(ms); return `${o.day}.${o.month} ${o.hour}:${o.minute}`; }
+function fmtHM(ms) { const o = parts(ms); return `${o.hour}:${o.minute}`; }
+function dur(ms) { if (!(ms >= 0)) return "—"; const m = Math.round(ms / 6e4); if (m < 60) return `${m} ${t("min")}`; const h = Math.floor(m / 60), mm = m % 60; if (h < 48) return `${h} ${t("h")}${mm ? " " + mm + " " + t("min") : ""}`; return `${Math.floor(h / 24)} ${t("d")} ${h % 24} ${t("h")}`; }
+function ago(ms) { const d = Date.now() - ms; return d < 6e4 ? t("sec") : `${dur(d)} ${t("ago")}`; }
+function nameOf(uid) { if (!uid) return "—"; if (uid === S.myId) return t("you"); return S.names[uid] || t("someone"); }
+function roleOf(uid) { return S.roles[uid] || "none"; }
+const isRu = () => S.isOwner || S.role === "ru";
+const isCn = () => S.isOwner || S.role === "cn";
+function setStatus(text, warn) { const el = document.getElementById("status"); if (!text) { el.hidden = true; return; } el.hidden = false; el.className = "notice" + (warn ? " warn" : ""); el.textContent = text; }
+function gate(title, text) { document.getElementById("tabs").hidden = true; document.getElementById("main").innerHTML = `<div class="gate"><h2>${esc(title)}</h2><p>${esc(text)}</p></div>`; }
+const blobUrl = id => "/_blob/" + encodeURIComponent(id);
+function avg(a) { return a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN; }
+
+/* ================================================================== */
+/*  Подключение                                                        */
+/* ================================================================== */
+async function boot() {
+  const ns = window.claude;
+  if (!ns || typeof ns.use !== "function") { gate("Откройте страницу в Claude", "Заявки работают внутри Claude, когда вы вошли в свой аккаунт. 请在 Claude 中打开。"); return; }
+  const [db, user, assets] = await Promise.all([ns.use("db"), ns.use("user"), ns.use("assets")]);
+  if (!db) { gate("Нет доступа к базе", "Войдите в аккаунт Claude и откройте ссылку снова. 请登录后重试。"); return; }
+  S.db = db; S.user = user; S.assets = assets;
+  ns.use("sample").then(s => { S.sample = s; }).catch(() => {});
+  S.isOwner = (await user?.isOwner()) ?? false;
+  S.myId = (await user?.id()) ?? null;
+  if (!S.myId) { gate("Не удалось определить пользователя", "Войдите в аккаунт Claude и откройте ссылку снова."); return; }
+  try { const me = await user.me(); document.getElementById("who").textContent = me.name || ""; } catch (e) {}
+  /* отметка «был на странице» — по ней владелец видит человека во вкладке «Люди» */
+  try { await db.doc("members/" + S.myId).set({ lastSeen: Date.now() }); } catch (e) {}
+
+  const timer = setTimeout(() => setStatus("База пока не отвечает. Проверьте интернет. 网络连接较慢。", true), 10000);
+  const onErr = () => { clearTimeout(timer); setStatus("Не удалось загрузить часть данных. Обновите страницу. 加载失败，请刷新。", true); };
+  const ok = () => { clearTimeout(timer); setStatus(""); };
+  db.doc("roles/main").onSnapshot(snap => { S.roles = snap.exists ? { ...snap.data() } : {}; S.role = S.isOwner ? "owner" : roleOf(S.myId); if (!LANG) LANG = S.role === "cn" ? "zh" : "ru"; refreshNames(); buildTabs(); render(true); }, onErr);
+  db.collection("requests").onSnapshot(snap => { ok(); S.reqs = snap.docs.map(d => ({ id: d.id, ...d.data() })); refreshNames(); render(); }, onErr);
+  db.collection("events").onSnapshot(snap => { S.events = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, onErr);
+  if (S.isOwner) db.collection("members").onSnapshot(snap => { S.members = snap.docs.map(d => ({ id: d.id, ...d.data() })); refreshNames(); render(); }, () => {});
+  bindEvents(); buildTabs(); render(true);
+}
+let namesBusy = false;
+async function refreshNames() {
+  if (!S.user || namesBusy) return;
+  const ids = new Set([...Object.keys(S.roles), ...S.members.map(m => m.id)]);
+  S.reqs.forEach(r => { [r.createdBy, r.takenBy].forEach(x => x && ids.add(x)); });
+  const need = [...ids].filter(id => !(id in S.names)); if (!need.length) return;
+  namesBusy = true;
+  try { const ps = await S.user.profiles(need.slice(0, 64)); for (const id of need) S.names[id] = (ps[id] && ps[id].name) || ""; render(); } catch (e) {}
+  namesBusy = false;
+}
+
+/* ================================================================== */
+/*  Отрисовка                                                          */
+/* ================================================================== */
+function tabList() { return S.isOwner ? [["queue", t("queue")], ["report", t("report")], ["people", t("people")]] : [["queue", t("queue")]]; }
+function buildTabs() {
+  const nav = document.getElementById("tabs"); nav.hidden = tabList().length < 2;
+  nav.innerHTML = tabList().map(([id, l]) => `<button class="tab" role="tab" data-tab="${id}" aria-selected="${S.tab === id}">${esc(l)}</button>`).join("");
+  document.getElementById("h1").textContent = t("title");
+  const r = document.getElementById("role"); r.hidden = false; r.textContent = S.isOwner ? t("owner") : t(S.role);
+  document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === (LANG || "ru"))));
+  document.documentElement.lang = LANG === "zh" ? "zh-CN" : "ru";
+}
+let queued = false, force = false;
+function render(f) { if (!S.db) return; if (f) force = true; if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; const ff = force; force = false; draw(ff); }); }
+function draw(f) {
+  const main = document.getElementById("main"), a = document.activeElement;
+  if (!f && a && main.contains(a) && a.matches("input, textarea, select")) { a.addEventListener("blur", () => render(), { once: true }); return; }
+  if (!S.isOwner && S.role === "none") { main.innerHTML = `<div class="gate"><h2>${esc(t("needRole"))}</h2><p>${esc(t("needRoleT"))}</p></div>`; return; }
+  const y = window.scrollY;
+  main.innerHTML = S.tab === "report" ? reportPage() : S.tab === "people" ? peoplePage() : S.open ? reqPage() : queuePage();
+  if (!f) window.scrollTo(0, y);
+}
+
+/* ---------- очередь ---------- */
+function stChip(st) { return `<span class="st" style="--st:var(${STAT[st] || "--s-off"})">${esc(t("st_" + st))}</span>`; }
+function isLate(r) { return (r.status === "new" || r.status === "rework" || r.status === "work") && Date.now() - (r.status === "rework" ? (r.reworkAt || r.createdAt) : r.createdAt) > DAY; }
+function filtered() {
+  const f = S.filter, mine = r => r.createdBy === S.myId || r.takenBy === S.myId;
+  return S.reqs.filter(r => f === "all" ? true : f === "mine" ? mine(r) : f === "review" ? r.status === "review" : f === "closed" ? ["done", "bad", "off"].includes(r.status) : ["new", "work", "rework", "review"].includes(r.status))
+    .sort((a, b) => (isLate(b) - isLate(a)) || ((b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt)));
+}
+function reqTitle(r) { return LANG === "zh" && r.titleZh ? r.titleZh : r.title; }
+function queuePage() {
+  const counts = { active: 0, mine: 0, review: 0, closed: 0, all: S.reqs.length };
+  for (const r of S.reqs) { if (["new", "work", "rework", "review"].includes(r.status)) counts.active++; if (r.createdBy === S.myId || r.takenBy === S.myId) counts.mine++; if (r.status === "review") counts.review++; if (["done", "bad", "off"].includes(r.status)) counts.closed++; }
+  const list = filtered();
+  return `<div class="list">
+    ${isRu() ? (S.oform ? newForm() : `<div class="row"><button class="btn" data-act="new">${esc(t("newReq"))}</button></div>`) : ""}
+    <div class="filters">${["active", "mine", "review", "closed", "all"].map(k => `<button class="chip" data-act="filter" data-v="${k}" aria-pressed="${S.filter === k}">${esc(t("f_" + k))}<span class="n">${counts[k]}</span></button>`).join("")}</div>
+    ${list.length ? list.map(card).join("") : `<div class="empty">${esc(S.reqs.length ? "—" : (isRu() ? "Заявок пока нет. Нажмите «Новая заявка» — она сразу появится у менеджера в Китае." : "暂无请求。俄罗斯经理创建请求后会显示在这里。"))}</div>`}
+  </div>`;
+}
+function card(r) {
+  const waitFrom = r.status === "review" ? r.deliveredAt : r.status === "rework" ? r.reworkAt : r.status === "work" ? r.takenAt : r.createdAt;
+  return `<button class="req" data-act="open" data-id="${esc(r.id)}" style="--st:var(${STAT[r.status] || "--s-off"})">
+    <div class="h"><b>${esc(reqTitle(r) || "—")}</b>${stChip(r.status)}${r.code ? `<span class="code">${esc(r.code)}</span>` : ""}${isLate(r) ? `<span class="late">${esc(t("late"))}</span>` : ""}</div>
+    <div class="meta"><span>${esc(t("createdBy"))}: <b>${esc(nameOf(r.createdBy))}</b></span>${r.takenBy ? `<span>${esc(t("searcher"))}: <b>${esc(nameOf(r.takenBy))}</b></span>` : ""}<span>${esc(t("age"))}: ${esc(fmtTime(r.createdAt))}</span>${["new", "work", "rework", "review"].includes(r.status) && waitFrom ? `<span>${esc(t("wait"))}: <b>${esc(dur(Date.now() - waitFrom))}</b></span>` : ""}${r.optCount ? `<span>${esc(t("options"))}: <b>${r.optCount}</b></span>` : ""}</div>
+  </button>`;
+}
+function newForm() {
+  const f = S.oform;
+  return `<form class="card" data-form="new" novalidate>
+    <div class="row"><h2>${esc(t("newReq").replace("+ ", ""))}</h2><span class="spacer"></span><button type="button" class="link" data-act="close-new">${esc(t("close"))}</button></div>
+    <div class="grid">
+      <div class="f wide"><label for="n-what">${esc(t("what"))}</label><input id="n-what" data-bind="oform.title" value="${esc(f.title)}" autocomplete="off" placeholder="Например: защитное стекло 9H для iPhone 16, коробка с логотипом"></div>
+      <div class="f"><label for="n-code">${esc(t("code"))}</label><input id="n-code" data-bind="oform.code" value="${esc(f.code)}" autocomplete="off"></div>
+      <div class="f"><label for="n-qty">${esc(t("qty"))}</label><input id="n-qty" data-bind="oform.qty" value="${esc(f.qty)}" autocomplete="off" placeholder="2000 шт"></div>
+      <div class="f"><label for="n-price">${esc(t("price"))}</label><input id="n-price" data-bind="oform.price" value="${esc(f.price)}" autocomplete="off" placeholder="до 3 ¥ за шт"></div>
+      <div class="f wide"><label for="n-details">${esc(t("details"))}</label><textarea id="n-details" data-bind="oform.details">${esc(f.details)}</textarea></div>
+      <div class="f wide"><label for="n-link">${esc(t("link"))}</label><input id="n-link" data-bind="oform.link" value="${esc(f.link)}" autocomplete="off"></div>
+      ${S.assets ? `<div class="f wide"><label for="n-photos">${esc(t("photos"))}</label><input id="n-photos" type="file" accept="image/*" multiple></div>` : ""}
+    </div>
+    <div class="row"><button type="button" class="btn" data-act="create" ${S.busy ? "disabled" : ""}>${esc(t("create"))}</button><span class="status ${S.msg?.where === "new" ? S.msg.cls : ""}" role="status">${S.msg?.where === "new" ? esc(S.msg.text) : ""}</span></div>
+  </form>`;
+}
+
+/* ---------- заявка ---------- */
+function reqPage() {
+  const r = S.reqs.find(x => x.id === S.open);
+  if (!r) return `<div class="empty"><button class="link" data-act="back">${esc(t("back"))}</button></div>`;
+  const evs = S.events.filter(e => e.reqId === r.id).sort((a, b) => a.ts - b.ts);
+  const showTr = LANG === "zh" ? (r.titleZh || r.detailsZh) : false;
+  const canTake = isCn() && (r.status === "new" || r.status === "rework") ;
+  const iSearch = isCn() && r.status === "work" && (r.takenBy === S.myId || S.isOwner);
+  const canReview = isRu() && r.status === "review" && (r.createdBy === S.myId || S.isOwner);
+  const canCancel = isRu() && ["new", "work", "rework"].includes(r.status) && (r.createdBy === S.myId || S.isOwner);
+  const comment = r.comment ? (LANG === "zh" && r.commentZh ? r.commentZh : r.comment) : "";
+  return `<div class="list">
+    <div><button class="link" data-act="back">${esc(t("back"))}</button></div>
+    <section class="card">
+      <div class="row"><h2 style="overflow-wrap:anywhere">${esc(r.title || "—")}</h2>${stChip(r.status)}${isLate(r) ? `<span class="late">${esc(t("late"))}</span>` : ""}</div>
+      <dl class="kv">
+        ${r.code ? `<dt>${esc(t("code"))}</dt><dd><b>${esc(r.code)}</b></dd>` : ""}
+        ${r.qty ? `<dt>${esc(t("qty"))}</dt><dd>${esc(r.qty)}</dd>` : ""}
+        ${r.price ? `<dt>${esc(t("price"))}</dt><dd>${esc(r.price)}</dd>` : ""}
+        ${r.details ? `<dt>${esc(t("details"))}</dt><dd style="white-space:pre-wrap">${esc(r.details)}</dd>` : ""}
+        ${r.link ? `<dt>${esc(t("link"))}</dt><dd>${/^https?:\/\//.test(r.link) ? `<a href="${esc(r.link)}" target="_blank" rel="noopener">${esc(r.link)}</a>` : esc(r.link)}</dd>` : ""}
+        <dt>${esc(t("createdBy"))}</dt><dd>${esc(nameOf(r.createdBy))} · ${esc(fmtTime(r.createdAt))}</dd>
+        ${r.takenBy ? `<dt>${esc(t("searcher"))}</dt><dd>${esc(nameOf(r.takenBy))}</dd>` : ""}
+      </dl>
+      ${(r.photos || []).length ? `<div class="photos">${r.photos.map(id => `<a href="${blobUrl(id)}" target="_blank" rel="noopener"><img src="${blobUrl(id)}" alt=""></a>`).join("")}</div>` : ""}
+      ${showTr ? `<div class="tr"><span class="lbl">${esc(t("trOf"))}</span>${esc([r.titleZh, r.detailsZh].filter(Boolean).join("\n\n"))}</div>` : ""}
+      ${LANG === "zh" && !r.titleZh && S.sample ? `<div><button class="btn ghost small" data-act="tr-req" ${S.trBusy ? "disabled" : ""}>${esc(S.trBusy === "req" ? t("translating") : t("translate"))}</button></div>` : ""}
+      ${comment ? `<div class="notice warn"><b>${esc(t("comment"))}:</b> ${esc(comment)}</div>` : ""}
+      ${LANG === "zh" && r.comment && !r.commentZh && S.sample ? `<div><button class="btn ghost small" data-act="tr-comment" ${S.trBusy ? "disabled" : ""}>${esc(S.trBusy === "comment" ? t("translating") : t("translate"))}</button></div>` : ""}
+      <div class="actions">
+        ${canTake ? `<button class="btn" data-act="take">${esc(t("take"))}</button>` : ""}
+        ${iSearch ? `<button class="btn ghost" data-act="add-opt">${esc(t("addOpt"))}</button><button class="btn" data-act="deliver">${esc(t("deliver"))}</button>` : ""}
+        ${canReview ? `<button class="btn good" data-act="review" data-v="done">${esc(t("accept"))}</button><button class="btn ghost" data-act="why" data-v="rework">${esc(t("rework"))}</button><button class="btn bad" data-act="why" data-v="bad">${esc(t("reject"))}</button>` : ""}
+        ${canCancel ? `<button class="btn quiet" data-act="cancel-req">${esc(t("cancelReq"))}</button>` : ""}
+      </div>
+      ${S.why ? whyForm() : ""}
+      <span class="status ${S.msg?.where === "req" ? S.msg.cls : ""}" role="status">${S.msg?.where === "req" ? esc(S.msg.text) : ""}</span>
+    </section>
+    ${S.form ? optForm() : ""}
+    <section class="card"><h2>${esc(t("options"))}</h2>
+      ${S.opts.length ? `<div class="opts">${S.opts.slice().sort((a, b) => a.createdAt - b.createdAt).map(o => optCard(o, r)).join("")}</div>` : `<div class="empty">${esc(t("noOptions"))}</div>`}
+    </section>
+    <section class="card"><h2>${esc(t("history"))}</h2>
+      <div class="log">${evs.map(e => `<div class="e"><span class="t">${esc(fmtTime(e.ts))}</span><span><b>${esc(nameOf(e.uid))}</b> ${esc(t(e.type))}${e.note ? ` — <span class="muted">${esc(e.note)}</span>` : ""}</span></div>`).join("") || `<div class="empty">—</div>`}</div>
+      <span class="small muted">${LANG === "zh" ? "中国时间" : "Время Китая"}</span>
+    </section>
+  </div>`;
+}
+function optCard(o, r) {
+  const note = LANG === "ru" && o.noteRu ? o.noteRu : o.note;
+  const tTitle = LANG === "ru" && o.titleRu ? o.titleRu : o.title;
+  const canDel = (o.createdBy === S.myId || S.isOwner) && r.status === "work";
+  const needTr = LANG === "ru" && !o.titleRu && /[一-鿿]/.test((o.title || "") + (o.note || ""));
+  return `<div class="opt">
+    ${o.photo ? `<a href="${blobUrl(o.photo)}" target="_blank" rel="noopener"><img src="${blobUrl(o.photo)}" alt=""></a>` : `<div class="noimg">—</div>`}
+    <div style="display:grid;gap:3px;min-width:0">
+      <span class="t">${esc(tTitle)}</span>
+      <span class="small">${[o.price ? `${esc(t("optPrice"))}: <b>${esc(o.price)}</b>` : "", o.moq ? `${esc(t("optMoq"))}: <b>${esc(o.moq)}</b>` : "", o.lead ? `${esc(t("optLead"))}: <b>${esc(o.lead)}</b>` : ""].filter(Boolean).join(" · ")}</span>
+      ${note ? `<span class="small" style="white-space:pre-wrap">${esc(note)}</span>` : ""}
+      ${o.link ? (/^https?:\/\//.test(o.link) ? `<a href="${esc(o.link)}" target="_blank" rel="noopener">${esc(o.link)}</a>` : `<span class="small">${esc(o.link)}</span>`) : ""}
+      <span class="small muted">${esc(nameOf(o.createdBy))} · ${esc(fmtTime(o.createdAt))}</span>
+      <div class="row">${needTr && S.sample ? `<button class="link small" data-act="tr-opt" data-id="${esc(o.id)}">${esc(S.trBusy === o.id ? TX.ru.translating : TX.ru.translate)}</button>` : ""}${canDel ? `<button class="link small" data-act="del-opt" data-id="${esc(o.id)}" style="color:var(--neg)">${esc(t("del"))}</button>` : ""}</div>
+    </div>
+  </div>`;
+}
+function optForm() {
+  const f = S.form;
+  return `<form class="card" data-form="opt" novalidate>
+    <div class="row"><h2>${esc(t("addOpt").replace("+ ", ""))}</h2><span class="spacer"></span><button type="button" class="link" data-act="close-opt">${esc(t("close"))}</button></div>
+    <div class="grid">
+      <div class="f wide"><label for="o-title">${esc(t("optTitle"))}</label><input id="o-title" data-bind="form.title" value="${esc(f.title)}" autocomplete="off"></div>
+      <div class="f"><label for="o-price">${esc(t("optPrice"))}</label><input id="o-price" data-bind="form.price" value="${esc(f.price)}" autocomplete="off"></div>
+      <div class="f"><label for="o-moq">${esc(t("optMoq"))}</label><input id="o-moq" data-bind="form.moq" value="${esc(f.moq)}" autocomplete="off"></div>
+      <div class="f"><label for="o-lead">${esc(t("optLead"))}</label><input id="o-lead" data-bind="form.lead" value="${esc(f.lead)}" autocomplete="off"></div>
+      <div class="f wide"><label for="o-link">${esc(t("optLink"))}</label><input id="o-link" data-bind="form.link" value="${esc(f.link)}" autocomplete="off"></div>
+      <div class="f wide"><label for="o-note">${esc(t("optNote"))}</label><textarea id="o-note" data-bind="form.note">${esc(f.note)}</textarea></div>
+      ${S.assets ? `<div class="f wide"><label for="o-photo">${esc(t("optPhoto"))}</label><input id="o-photo" type="file" accept="image/*"></div>` : ""}
+    </div>
+    <div class="row"><button type="button" class="btn" data-act="save-opt" ${S.busy ? "disabled" : ""}>${esc(t("save"))}</button><span class="status ${S.msg?.where === "opt" ? S.msg.cls : ""}" role="status">${S.msg?.where === "opt" ? esc(S.msg.text) : ""}</span></div>
+  </form>`;
+}
+function whyForm() {
+  const k = S.why.kind;
+  return `<div class="f"><label for="why">${esc(t(k === "rework" ? "reworkWhy" : "rejectWhy"))}</label><textarea id="why" data-bind="why.text">${esc(S.why.text)}</textarea>
+    <div class="row"><button class="btn ${k === "bad" ? "bad" : ""}" data-act="review" data-v="${k}">${esc(t(k === "rework" ? "rework" : "reject"))}</button><button class="btn quiet" data-act="why-close">${esc(t("cancel"))}</button></div></div>`;
+}
+
+/* ---------- отчёт ---------- */
+function periodStart() { const p = S.rep.period; const today0 = Date.parse(dayKey(Date.now()) + "T00:00:00+08:00"); return p === "today" ? today0 : p === "d7" ? today0 - 6 * DAY : today0 - 29 * DAY; }
+function reportPage() {
+  const from = periodStart();
+  const ev = S.events.filter(e => e.ts >= from);
+  const people = [...new Set([...Object.keys(S.roles).filter(u => S.roles[u] === "cn"), ...S.events.filter(e => e.type === "taken").map(e => e.uid)])];
+  const ruPeople = [...new Set([...Object.keys(S.roles).filter(u => S.roles[u] === "ru"), ...S.reqs.map(r => r.createdBy)])].filter(u => u && !(people.includes(u) && S.roles[u] !== "ru"));
+  /* по каждому, кто ищет в Китае */
+  const cnRows = people.map(uid => {
+    const taken = ev.filter(e => e.uid === uid && e.type === "taken");
+    const deliv = ev.filter(e => e.uid === uid && e.type === "delivered");
+    const takeT = taken.map(e => { const r = S.reqs.find(x => x.id === e.reqId); const prev = S.events.filter(x => x.reqId === e.reqId && (x.type === "created" || x.type === "reworked") && x.ts <= e.ts).sort((a, b) => b.ts - a.ts)[0]; return prev ? e.ts - prev.ts : NaN; }).filter(isFinite);
+    const searchT = deliv.map(e => { const prev = S.events.filter(x => x.reqId === e.reqId && x.type === "taken" && x.ts <= e.ts).sort((a, b) => b.ts - a.ts)[0]; return prev ? e.ts - prev.ts : NaN; }).filter(isFinite);
+    const reviewed = ev.filter(e => ["accepted", "rejected", "reworked"].includes(e.type) && S.reqs.find(r => r.id === e.reqId)?.takenBy === uid);
+    const okFirst = reviewed.filter(e => e.type === "accepted" && !(S.reqs.find(r => r.id === e.reqId)?.reworks)).length;
+    const rework = reviewed.filter(e => e.type === "reworked").length;
+    return { uid, taken: taken.length, deliv: deliv.length, takeT: avg(takeT), searchT: avg(searchT), okFirst, reviewed: reviewed.filter(e => e.type !== "reworked").length, rework };
+  });
+  const ruRows = ruPeople.map(uid => {
+    const created = ev.filter(e => e.uid === uid && e.type === "created").length;
+    const revT = ev.filter(e => e.uid === uid && ["accepted", "rejected", "reworked"].includes(e.type)).map(e => { const prev = S.events.filter(x => x.reqId === e.reqId && x.type === "delivered" && x.ts <= e.ts).sort((a, b) => b.ts - a.ts)[0]; return prev ? e.ts - prev.ts : NaN; }).filter(isFinite);
+    return { uid, created, revT: avg(revT) };
+  });
+  const now = { q: S.reqs.filter(r => r.status === "new" || r.status === "rework").length, w: S.reqs.filter(r => r.status === "work").length, rv: S.reqs.filter(r => r.status === "review").length };
+  const late = S.reqs.filter(isLate);
+  if (!S.rep.day) S.rep.day = dayKey(Date.now());
+  if (!S.rep.person && people.length) S.rep.person = people[0];
+  return `<div class="list">
+    <section class="card"><h2>${esc(t("nowT"))}</h2>
+      <div class="kpis">
+        <div class="kpi"><span class="k">${esc(t("inQueue"))}</span><span class="v">${now.q}</span></div>
+        <div class="kpi"><span class="k">${esc(t("inWork"))}</span><span class="v">${now.w}</span></div>
+        <div class="kpi"><span class="k">${esc(t("toReview"))}</span><span class="v">${now.rv}</span></div>
+        <div class="kpi"><span class="k">${esc(t("lateList"))}</span><span class="v ${late.length ? "neg" : "pos"}">${late.length}</span></div>
+      </div>
+      ${late.length ? `<div class="list">${late.map(card).join("")}</div>` : ""}
+    </section>
+    <section class="card">
+      <div class="row"><h2>${esc(t("cn"))}</h2><span class="spacer"></span><div class="filters">${["today", "d7", "d30"].map(k => `<button class="chip" data-act="period" data-v="${k}" aria-pressed="${S.rep.period === k}">${esc(t(k))}</button>`).join("")}</div></div>
+      ${cnRows.length ? cnRows.map(x => `<div style="display:grid;gap:8px"><b>${esc(nameOf(x.uid))}</b><div class="kpis">
+        <div class="kpi"><span class="k">${esc(t("rTaken"))}</span><span class="v">${x.taken}</span></div>
+        <div class="kpi"><span class="k">${esc(t("rDelivered"))}</span><span class="v">${x.deliv}</span></div>
+        <div class="kpi"><span class="k">${esc(t("rTakeT"))}</span><span class="v">${esc(dur(x.takeT))}</span></div>
+        <div class="kpi"><span class="k">${esc(t("rSearchT"))}</span><span class="v">${esc(dur(x.searchT))}</span></div>
+        <div class="kpi"><span class="k">${esc(t("rOk"))}</span><span class="v">${x.reviewed ? `${x.okFirst} / ${x.reviewed}` : "—"}</span><span class="x">оценено заявок</span></div>
+        <div class="kpi"><span class="k">${esc(t("rRework"))}</span><span class="v ${x.rework ? "warn" : ""}">${x.rework}</span></div>
+      </div></div>`).join("") : `<div class="empty">Назначьте менеджеру в Китае роль во вкладке «Люди».</div>`}
+      ${ruRows.length ? `<div class="tbl"><table><thead><tr><th>${esc(t("ru"))}</th><th class="num">${esc(t("rCreated"))}</th><th class="num">${esc(t("rReviewT"))}</th></tr></thead><tbody>
+        ${ruRows.map(x => `<tr><td><b>${esc(nameOf(x.uid))}</b></td><td class="num">${x.created}</td><td class="num">${esc(dur(x.revT))}</td></tr>`).join("")}
+      </tbody></table></div>` : ""}
+    </section>
+    ${dayCard([...people, ...ruPeople])}
+  </div>`;
+}
+function dayCard(all) {
+  const uid = S.rep.person, day = S.rep.day;
+  const ev = S.events.filter(e => e.uid === uid && dayKey(e.ts) === day).sort((a, b) => a.ts - b.ts);
+  const per = Array(24).fill(0); ev.forEach(e => per[hourOf(e.ts)]++);
+  let gap = 0, gFrom = 0, gTo = 0; for (let i = 1; i < ev.length; i++) { const g = ev[i].ts - ev[i - 1].ts; if (g > gap) { gap = g; gFrom = ev[i - 1].ts; gTo = ev[i].ts; } }
+  return `<section class="card"><h2>${esc(t("dayT"))}</h2><p class="sub">${esc(t("dayHint"))}</p>
+    <div class="grid"><div class="f"><label for="d-person">${esc(t("people"))}</label><select id="d-person" data-act="d-person">${all.map(u => `<option value="${esc(u)}" ${u === uid ? "selected" : ""}>${esc(nameOf(u))} · ${esc(t(roleOf(u)))}</option>`).join("")}</select></div>
+    <div class="f"><label for="d-day">Дата / 日期</label><input id="d-day" type="date" data-act="d-day" value="${esc(day)}"></div></div>
+    <div class="hours">${per.map(n => `<div class="c ${n >= 2 ? "on" : n ? "on2" : ""}" title="${n}">${n ? `<span>${n}</span>` : ""}</div>`).join("")}</div>
+    <div class="hlab">${per.map((_, h) => `<span>${h % 3 === 0 ? h : ""}</span>`).join("")}</div>
+    ${ev.length ? `<dl class="kv"><dt>${esc(t("first"))}</dt><dd><b>${esc(fmtHM(ev[0].ts))}</b></dd><dt>${esc(t("last"))}</dt><dd><b>${esc(fmtHM(ev[ev.length - 1].ts))}</b></dd>${ev.length > 1 ? `<dt>${esc(t("gap"))}</dt><dd><b class="${gap > 2 * H ? "warn" : ""}">${esc(dur(gap))}</b> · ${esc(fmtHM(gFrom))}–${esc(fmtHM(gTo))}</dd>` : ""}</dl>
+      <div class="log">${ev.map(e => { const r = S.reqs.find(x => x.id === e.reqId); return `<div class="e"><span class="t">${esc(fmtHM(e.ts))}</span><span>${esc(t(e.type))} — <button class="link" data-act="open-from-rep" data-id="${esc(e.reqId)}">${esc((r && reqTitle(r)) || "—")}</button></span></div>`; }).join("")}</div>`
+      : `<div class="empty">${esc(t("noActs"))}</div>`}
+  </section>`;
+}
+
+/* ---------- люди ---------- */
+function peoplePage() {
+  const ids = [...new Set([...S.members.map(m => m.id), ...Object.keys(S.roles)])].filter(id => id !== S.myId);
+  const seen = Object.fromEntries(S.members.map(m => [m.id, m.lastSeen]));
+  return `<section class="card"><h2>${esc(t("peopleT"))}</h2><p class="sub">${esc(t("peopleSub"))} Поделитесь ссылкой на эту страницу с менеджерами (меню «Поделиться», право вносить изменения).</p>
+    ${ids.length ? `<div class="tbl"><table><tbody>${ids.map(id => `<tr><td><b>${esc(nameOf(id))}</b><div class="small muted">${seen[id] ? `${esc(t("lastSeen"))}: ${esc(fmtTime(seen[id]))}` : ""}</div></td>
+      <td style="width:190px"><select data-act="set-role" data-uid="${esc(id)}" aria-label="Роль">${["none", "ru", "cn"].map(r => `<option value="${r}" ${roleOf(id) === r ? "selected" : ""}>${esc(TX.ru[r])}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div>`
+      : `<div class="empty">Пока никто, кроме вас, страницу не открывал.</div>`}
+    <span class="status ${S.msg?.where === "people" ? S.msg.cls : ""}" role="status">${S.msg?.where === "people" ? esc(S.msg.text) : ""}</span>
+  </section>`;
+}
+
+/* ================================================================== */
+/*  Действия                                                           */
+/* ================================================================== */
+async function logEvent(reqId, type, note) { await S.db.collection("events").doc().set({ reqId, type, uid: S.myId, ts: Date.now(), ...(note ? { note: note.slice(0, 300) } : {}) }); }
+async function uploadFiles(input, max) {
+  if (!S.assets || !input || !input.files || !input.files.length) return [];
+  const out = []; for (const file of [...input.files].slice(0, max)) { const r = await S.assets.upload(file); out.push(r.id); } return out;
+}
+function openReq(id) {
+  if (S.optUnsub) { try { S.optUnsub(); } catch (e) {} S.optUnsub = null; }
+  S.open = id; S.opts = []; S.form = null; S.why = null; S.msg = null;
+  if (id) S.optUnsub = S.db.collection(`requests/${id}/options`).onSnapshot(snap => { S.opts = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, () => {});
+  render(true); window.scrollTo(0, 0);
+}
+async function setReq(id, upd) { await S.db.doc("requests/" + id).update({ ...upd, updatedAt: Date.now() }); }
+async function act(fn, where) { if (S.busy) return; S.busy = true; render(true); try { await fn(); } catch (e) { S.msg = { where, cls: "err", text: t("errSave") }; } finally { S.busy = false; render(true); } }
+
+const HANDLERS = {
+  new: () => { S.oform = { title: "", code: "", qty: "", price: "", details: "", link: "" }; S.msg = null; render(true); setTimeout(() => document.getElementById("n-what")?.focus(), 30); },
+  "close-new": () => { S.oform = null; render(true); },
+  filter: (b, v) => { S.filter = v; render(true); },
+  open: (b) => openReq(b.dataset.id),
+  "open-from-rep": (b) => { S.tab = "queue"; buildTabs(); openReq(b.dataset.id); },
+  back: () => openReq(null),
+  create: () => {
+    const f = S.oform; if (!f.title.trim()) { S.msg = { where: "new", cls: "err", text: t("errWhat") }; render(true); return; }
+    const input = document.getElementById("n-photos");
+    act(async () => {
+      if (input && input.files.length) { S.msg = { where: "new", cls: "", text: t("upload") }; render(true); }
+      const photos = await uploadFiles(input, 6);
+      const ref = S.db.collection("requests").doc(); const now = Date.now();
+      await ref.set({ title: f.title.trim().slice(0, 200), code: f.code.trim().slice(0, 60), qty: f.qty.trim().slice(0, 80), price: f.price.trim().slice(0, 80), details: f.details.trim().slice(0, 2000), link: f.link.trim().slice(0, 500), photos, status: "new", createdBy: S.myId, createdAt: now, updatedAt: now, reworks: 0, optCount: 0 });
+      await logEvent(ref.id, "created");
+      S.oform = null; S.msg = null;
+    }, "new");
+  },
+  take: () => act(async () => { const r = S.reqs.find(x => x.id === S.open); await setReq(r.id, { status: "work", takenBy: S.myId, takenAt: r.takenAt || Date.now() }); await logEvent(r.id, "taken"); S.msg = null; }, "req"),
+  "add-opt": () => { S.form = { title: "", price: "", moq: "", lead: "", link: "", note: "" }; S.msg = null; render(true); setTimeout(() => document.getElementById("o-title")?.focus(), 30); },
+  "close-opt": () => { S.form = null; render(true); },
+  "save-opt": () => {
+    const f = S.form; if (!f.title.trim()) { S.msg = { where: "opt", cls: "err", text: t("errOpt") }; render(true); return; }
+    const input = document.getElementById("o-photo"), id = S.open;
+    act(async () => {
+      const [photo] = await uploadFiles(input, 1);
+      await S.db.collection(`requests/${id}/options`).doc().set({ title: f.title.trim().slice(0, 200), price: f.price.trim().slice(0, 60), moq: f.moq.trim().slice(0, 60), lead: f.lead.trim().slice(0, 60), link: f.link.trim().slice(0, 500), note: f.note.trim().slice(0, 1500), photo: photo || null, createdBy: S.myId, createdAt: Date.now() });
+      const r = S.reqs.find(x => x.id === id); await setReq(id, { optCount: (r.optCount || 0) + 1 });
+      await logEvent(id, "optAdded", f.title.trim());
+      S.form = null; S.msg = { where: "req", cls: "ok", text: t("saved") };
+    }, "opt");
+  },
+  "del-opt": (b) => act(async () => { const id = S.open; await S.db.doc(`requests/${id}/options/${b.dataset.id}`).delete(); const r = S.reqs.find(x => x.id === id); await setReq(id, { optCount: Math.max(0, (r.optCount || 1) - 1) }); }, "req"),
+  deliver: () => {
+    if (!S.opts.length) { S.msg = { where: "req", cls: "err", text: t("errNoOpt") }; render(true); return; }
+    act(async () => { await setReq(S.open, { status: "review", deliveredAt: Date.now() }); await logEvent(S.open, "delivered"); S.msg = null; }, "req");
+  },
+  why: (b, v) => { S.why = { kind: v, text: "" }; render(true); setTimeout(() => document.getElementById("why")?.focus(), 30); },
+  "why-close": () => { S.why = null; render(true); },
+  review: (b, v) => {
+    const text = S.why?.text?.trim() || "";
+    if (v === "rework" && !text) { document.getElementById("why")?.focus(); return; }
+    act(async () => {
+      const r = S.reqs.find(x => x.id === S.open), now = Date.now();
+      if (v === "done") { await setReq(r.id, { status: "done", reviewedAt: now, closedAt: now }); await logEvent(r.id, "accepted"); }
+      else if (v === "bad") { await setReq(r.id, { status: "bad", reviewedAt: now, closedAt: now, comment: text, commentZh: "" }); await logEvent(r.id, "rejected", text); }
+      else { await setReq(r.id, { status: "rework", reviewedAt: now, reworkAt: now, reworks: (r.reworks || 0) + 1, comment: text, commentZh: "" }); await logEvent(r.id, "reworked", text); }
+      S.why = null; S.msg = null;
+    }, "req");
+  },
+  "cancel-req": () => act(async () => { await setReq(S.open, { status: "off", closedAt: Date.now() }); await logEvent(S.open, "cancelled"); }, "req"),
+  period: (b, v) => { S.rep.period = v; render(true); },
+  "tr-req": () => translate("req"),
+  "tr-comment": () => translate("comment"),
+  "tr-opt": (b) => translate("opt", b.dataset.id)
+};
+
+/* Перевод через Claude: заявку — на китайский для менеджера в Китае, варианты — на русский */
+async function translate(kind, optId) {
+  if (!S.sample || S.trBusy) return;
+  const r = S.reqs.find(x => x.id === S.open); if (!r) return;
+  S.trBusy = kind === "opt" ? optId : kind; render(true);
+  try {
+    if (kind === "req") {
+      const out = await S.sample.json(`Переведи заявку на поиск товара с русского на упрощённый китайский для закупщика в Китае. Сохрани числа, размеры и названия брендов. Верни JSON {"title": "...", "details": "..."} без пояснений.\n\nНазвание: ${r.title}\nКоличество: ${r.qty || "-"}\nЖелаемая цена: ${r.price || "-"}\nПодробности: ${r.details || "-"}`);
+      const details = [out.details, r.qty ? `数量: ${r.qty}` : "", r.price ? `期望价格: ${r.price}` : ""].filter(Boolean).join("\n");
+      await setReq(r.id, { titleZh: String(out.title || "").slice(0, 300), detailsZh: details.slice(0, 3000) });
+    } else if (kind === "comment") {
+      const out = await S.sample.json(`Переведи комментарий менеджера закупщику с русского на упрощённый китайский. Верни JSON {"text": "..."}.\n\n${r.comment}`);
+      await setReq(r.id, { commentZh: String(out.text || "").slice(0, 1000) });
+    } else {
+      const o = S.opts.find(x => x.id === optId); if (!o) return;
+      const out = await S.sample.json(`Переведи найденный вариант товара с китайского на русский. Сохрани числа. Верни JSON {"title": "...", "note": "..."}.\n\nНазвание: ${o.title}\nКомментарий: ${o.note || "-"}`);
+      await S.db.doc(`requests/${r.id}/options/${optId}`).update({ titleRu: String(out.title || "").slice(0, 300), noteRu: String(out.note || "").slice(0, 2000) });
+    }
+  } catch (e) { S.msg = { where: "req", cls: "err", text: t("trNo") }; }
+  finally { S.trBusy = ""; render(true); }
+}
+
+function bindEvents() {
+  document.addEventListener("click", e => {
+    const tab = e.target.closest("[data-tab]"); if (tab) { S.tab = tab.dataset.tab; S.msg = null; buildTabs(); if (S.tab !== "queue") openReq(null); else render(true); return; }
+    const lb = e.target.closest("[data-lang]"); if (lb) { LANG = lb.dataset.lang; try { localStorage.setItem("tw-search-lang", LANG); } catch (er) {} buildTabs(); render(true); return; }
+    const b = e.target.closest("[data-act]"); if (!b || b.tagName === "SELECT" || b.tagName === "INPUT") return;
+    const h = HANDLERS[b.dataset.act]; if (h) { e.preventDefault(); h(b, b.dataset.v); }
+  });
+  document.addEventListener("input", e => {
+    const el = e.target, bind = el.dataset.bind; if (!bind) return;
+    const [obj, key] = bind.split("."); if (S[obj]) S[obj][key] = el.value;
+  });
+  document.addEventListener("change", async e => {
+    const el = e.target;
+    if (el.dataset.act === "d-person") { S.rep.person = el.value; render(true); }
+    else if (el.dataset.act === "d-day") { S.rep.day = el.value || dayKey(Date.now()); render(true); }
+    else if (el.dataset.act === "set-role") {
+      const roles = { ...S.roles }; if (el.value === "none") delete roles[el.dataset.uid]; else roles[el.dataset.uid] = el.value;
+      try { await S.db.doc("roles/main").set(roles); S.msg = { where: "people", cls: "ok", text: `${t("saved")}: ${nameOf(el.dataset.uid)} — ${TX.ru[el.value]}` }; }
+      catch (er) { S.msg = { where: "people", cls: "err", text: t("errSave") }; }
+      render(true);
+    }
+  });
+  document.addEventListener("submit", e => e.preventDefault());
+  setInterval(() => render(), 60000); /* «ждёт N мин» и «без ответа > 24 ч» обновляются сами */
+}
+
+boot();
+</script>

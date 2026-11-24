@@ -1,0 +1,1996 @@
+<title>Trust Way Учёт</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one working column (max 1040px). Deals are the centre: a list, then one deal page with its stages, quick money buttons and history. Owner adds Summary, Cash and Settings. */
+:root {
+  --bg: #f1f3f8;
+  --surface: #ffffff;
+  --surface-2: #f6f7fb;
+  --fg: #131830;
+  --muted: #5b6383;
+  --line: #d8dcea;
+  --accent: #26369a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e7f8;
+  --pos: #1c7448;
+  --neg: #b3261e;
+  --warn: #8f5a00;
+  --font: "Segoe UI", system-ui, -apple-system, "PingFang SC", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1020; --surface: #161a2e; --surface-2: #1b2036; --fg: #e8eaf4; --muted: #9aa1c2;
+    --line: #2a3050; --accent: #9aa6ff; --accent-ink: #0d1020; --accent-soft: #232a4d;
+    --pos: #5ccb8f; --neg: #ff8a80; --warn: #f2b85b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1020; --surface: #161a2e; --surface-2: #1b2036; --fg: #e8eaf4; --muted: #9aa1c2;
+  --line: #2a3050; --accent: #9aa6ff; --accent-ink: #0d1020; --accent-soft: #232a4d;
+  --pos: #5ccb8f; --neg: #ff8a80; --warn: #f2b85b; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.45;
+  padding-left: max(14px, env(safe-area-inset-left, 0px));
+  padding-right: max(14px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 56px;
+  font-variant-numeric: tabular-nums;
+}
+.app { max-width: 1040px; margin: 0 auto; display: grid; gap: 14px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.brand h1 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
+.brand span { color: var(--muted); font-size: 14px; }
+.role { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.tabs { display: flex; gap: 4px; overflow-x: auto; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; font: inherit; font-weight: 600; border: 0; background: transparent; color: var(--muted); padding: 9px 16px; border-radius: 9px; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, .deal:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.notice { padding: 11px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+.notice.warn { border-color: var(--warn); color: var(--fg); }
+.gate { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 26px 22px; display: grid; gap: 8px; max-width: 560px; }
+.gate h2 { margin: 0; font-size: 19px; }
+.gate p { margin: 0; color: var(--muted); }
+
+.panel { display: grid; gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.card h2 { margin: 0 0 4px; font-size: 17px; font-weight: 650; text-wrap: balance; }
+.card h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.sub { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.code { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.pos { color: var(--pos); }
+.neg { color: var(--neg); }
+
+/* buttons */
+.btn { font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.quiet { background: transparent; color: var(--muted); border-color: var(--line); }
+.btn.small { padding: 6px 12px; font-size: 13.5px; font-weight: 500; }
+.btn.danger { border-color: var(--neg); color: var(--neg); background: transparent; }
+.btn:disabled { opacity: .5; cursor: default; }
+.link { font: inherit; background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-weight: 500; text-align: left; }
+
+/* quick actions */
+.actions { display: grid; gap: 12px; }
+.agroup { display: grid; gap: 6px; }
+.abtns { display: flex; gap: 6px; flex-wrap: wrap; }
+.abtn { font: inherit; font-size: 14px; font-weight: 500; padding: 9px 13px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--fg); cursor: pointer; }
+.abtn.hint { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.abtn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+
+/* checklist */
+.key { display: inline-block; font-size: 12.5px; margin-right: 10px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); cursor: pointer; }
+.check input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--accent); }
+.key.done { color: var(--pos); } .key.due { color: var(--warn); } .key.later { color: var(--muted); }
+.warn-t { color: var(--warn); font-weight: 600; }
+.cl { display: grid; gap: 10px; }
+.cl-group { display: grid; gap: 6px; padding: 10px; border-radius: 12px; border: 1px solid var(--line); }
+.cl-group.now { border-color: var(--accent); background: var(--accent-soft); }
+.cl-stage { font-size: 13px; font-weight: 650; color: var(--muted); }
+.cl-group.now .cl-stage { color: var(--accent); }
+.cl-now { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; background: var(--accent); color: var(--accent-ink); padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+.cl-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 10px; background: var(--surface); border: 1.5px solid var(--line); border-left-width: 5px; }
+.cl-mark { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px; border: 1.5px solid var(--line); color: var(--muted); }
+.cl-main { display: grid; gap: 1px; min-width: 0; }
+.cl-t { font-weight: 600; }
+.cl-d { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.cl-row.st-done, .cl-row.st-part { border-color: color-mix(in srgb, var(--pos) 45%, var(--line)); border-left-color: var(--pos); }
+.cl-row.st-done .cl-mark, .cl-row.st-part .cl-mark { background: var(--pos); border-color: var(--pos); color: var(--surface); }
+.cl-row.st-due { border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); border-left-color: var(--warn); background: color-mix(in srgb, var(--warn) 8%, var(--surface)); }
+.cl-row.st-due .cl-mark { background: var(--warn); border-color: var(--warn); color: var(--surface); }
+.cl-row.st-opt { border-style: dashed; border-left-style: solid; border-left-color: var(--line); }
+.cl-row.st-later { opacity: .72; border-left-color: var(--line); }
+.cl-form { margin: 2px 0 6px; }
+.cl-ents { display: grid; gap: 2px; margin-top: 4px; }
+.cl-ent { display: flex; gap: 10px; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--muted); padding: 3px 0; border-top: 1px dashed var(--line); }
+.cl-ent b { color: var(--fg); font-weight: 600; }
+.cl-ent.on { color: var(--accent); }
+.cl-ent .link { flex: none; }
+.cl-st { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.cl-st.now { color: var(--accent); }
+.legend { margin: 0; }
+.sub-block { display: grid; gap: 10px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); }
+.sub-block h3 { margin: 0; }
+.calc-box { font-size: 14px; line-height: 1.55; padding: 12px; border-radius: 10px; background: var(--accent-soft); }
+.calc-box:empty { display: none; }
+.sec { border-top-width: 5px; }
+.sec-goods { border-top-color: var(--accent); }
+.sec-log { border-top-color: color-mix(in srgb, var(--warn) 70%, var(--accent)); }
+.sec-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.sec-head h2 { margin: 0; font-size: 19px; }
+.stats { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); margin-bottom: 12px; }
+.stat { display: grid; gap: 2px; padding: 9px 11px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stat b { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }
+.stat.main { border-color: var(--accent); }
+@media (max-width: 420px) { .stats { grid-template-columns: 1fr 1fr; } .stat.main { grid-column: 1 / -1; } }
+.deal.ok { border-left: 5px solid var(--pos); }
+.deal.todo { border-left: 5px solid var(--warn); }
+.flag { font-size: 12.5px; font-weight: 600; padding: 2px 9px; border-radius: 99px; }
+.flag.ok { color: var(--pos); background: color-mix(in srgb, var(--pos) 12%, transparent); }
+.flag.todo { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+
+/* form */
+.form { display: grid; gap: 12px; padding: 14px; border: 1.5px solid var(--accent); border-radius: 12px; background: var(--surface); }
+.form-head { display: flex; align-items: baseline; gap: 8px; }
+.form-head b { font-size: 16px; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.f { display: grid; gap: 5px; min-width: 0; }
+.f.wide { grid-column: 1 / -1; }
+.f > label, .f > .lbl { font-size: 13px; color: var(--muted); font-weight: 500; }
+.hint-t { font-size: 12.5px; color: var(--muted); }
+input, select, textarea { font: inherit; font-size: 16px; width: 100%; min-width: 0; padding: 9px 11px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--fg); }
+input[type="file"] { padding: 7px; font-size: 14px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip-btn { font: inherit; font-size: 13.5px; padding: 7px 11px; border-radius: 99px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--fg); cursor: pointer; }
+.chip-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.amount { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.curs { display: flex; gap: 4px; flex-wrap: wrap; }
+.curs button { font: inherit; font-weight: 600; font-size: 14px; min-width: 52px; padding: 8px 10px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--fg); cursor: pointer; }
+.curs button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.conv { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: end; }
+.conv .eq { padding-bottom: 10px; color: var(--muted); }
+.ok { color: var(--pos); font-weight: 500; }
+.err { color: var(--neg); font-weight: 500; }
+
+/* stepper */
+.stepper { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.stepper::-webkit-scrollbar { display: none; }
+.step { flex: none; font: inherit; font-size: 13px; font-weight: 500; padding: 7px 11px; border-radius: 99px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.step.past { color: var(--fg); border-color: var(--line); background: var(--accent-soft); }
+.step.now { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+.progress { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.progress i { height: 4px; border-radius: 2px; background: var(--line); }
+.progress i.on { background: var(--accent); }
+
+/* KPIs */
+.kpis { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr)); }
+@media (max-width: 420px) { .kpi .v { font-size: 20px; } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; display: grid; gap: 2px; min-width: 0; }
+.kpi .k { font-size: 13px; color: var(--muted); }
+.kpi .v { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.kpi .x { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.kpi.main { border-color: var(--accent); border-width: 1.5px; }
+
+/* tables */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12.5px; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tr.total td { font-weight: 650; border-top: 1.5px solid var(--line); }
+.empty { color: var(--muted); padding: 16px 4px; text-align: center; }
+.bar { height: 6px; border-radius: 3px; background: var(--accent); min-width: 2px; }
+
+/* deals */
+.deals { display: grid; gap: 8px; }
+.deal { display: grid; gap: 7px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
+.deal:hover { border-color: var(--accent); }
+.deal-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.deal-head b { font-weight: 650; font-size: 15.5px; }
+.what { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.stage { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.stage.done { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+.meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); }
+.meta b { color: var(--fg); font-weight: 600; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters select, .filters input { width: auto; font-size: 14px; padding: 7px 10px; }
+.filters input { flex: 1; min-width: 160px; }
+
+/* history */
+.hist { display: grid; }
+.hrow { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.hrow:last-child { border-bottom: 0; }
+.hdate { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 2px; min-width: 58px; }
+.hmain { min-width: 0; display: grid; gap: 2px; }
+.hmain .t { font-weight: 550; }
+.hmain .d { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.hamt { text-align: right; white-space: nowrap; display: grid; gap: 2px; justify-items: end; }
+.hamt .c { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.thumb { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.receipt { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: var(--accent); text-decoration: none; margin-top: 4px; }
+.confirm { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.xgrid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.xside { display: grid; gap: 10px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); align-content: start; }
+.xside input, .xside select { background: var(--surface); }
+tr.grp td { padding-top: 14px; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+tr.grp:first-child td { padding-top: 4px; }
+.money-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+@media (prefers-reduced-motion: no-preference) { .tab, .abtn, .chip-btn, .curs button, .step, .deal { transition: background .12s, border-color .12s, color .12s; } }
+</style>
+
+<div class="app">
+  <div class="top">
+    <div class="brand"><h1>Trust Way · Учёт</h1><span id="who-am-i"></span></div>
+    <span class="role" id="role" hidden></span>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Разделы" hidden></nav>
+  <div id="status" hidden></div>
+  <main id="main"><div class="gate"><h2>Загрузка…</h2><p>Подключаюсь к базе учёта.</p></div></main>
+</div>
+
+<script>
+/* ================================================================== */
+/*  Справочники процесса                                               */
+/* ================================================================== */
+/* Сделку заводят, когда клиент согласился и оплатил — этапа «Заявка» в учёте нет (заявки живут в amoCRM) */
+const STAGES = [
+  ["payment", "Оплата"], ["buyout", "Выкуп"], ["warehouse", "Склад TW"],
+  ["transit", "В пути в Москву"], ["moscow", "Москва"], ["done", "Выдан клиенту"]
+];
+const STAGE_IDX = Object.fromEntries(STAGES.map(([id], i) => [id, i]));
+const STAGE_NAME = Object.fromEntries(STAGES);
+STAGE_NAME.cancelled = "Отменена";
+
+const CATS = {
+  charge: ["Товар", "Образец", "Доставка до Москвы", "Расходы по Москве"],
+  income: ["Товар · депозит", "Товар · доплата", "Товар · полная оплата", "Доставка · предоплата", "Доставка · доплата", "Доставка · полная оплата", "Расходы по Москве"],
+  expense: ["Выкуп товара", "Образец", "Возврат от поставщика", "Компенсация клиенту за брак", "Прочее по товару", "Логистика по Китаю", "Упаковка", "Доставка в Москву", "Расходы по Москве", "Прочее по сделке"],
+  plan: ["Сумма поставщика"],
+  general: ["Зарплата и бонусы менеджеров", "Аренда офиса", "Офисные расходы", "Комиссии и обмен валюты", "Реклама", "Прочее"]
+};
+const PARTS = [["goods", "Товар"], ["delivery", "Доставка до Москвы"], ["moscow", "Расходы по Москве"]];
+const PART_OF = { "Товар": "goods", "Образец": "goods", "Товар · депозит": "goods", "Товар · доплата": "goods", "Товар · полная оплата": "goods", "Доставка до Москвы": "delivery", "Доставка · предоплата": "delivery", "Доставка · доплата": "delivery", "Доставка · полная оплата": "delivery", "Расходы по Москве": "moscow" };
+/* Эти варианты оплаты закрывают весь остаток счёта: сумма и курс связаны */
+const FULL_CATS = ["Товар · полная оплата", "Товар · доплата", "Доставка · полная оплата", "Доставка · доплата", "Доставка до Москвы", "Расходы по Москве"];
+/* Возврат от поставщика (недовложение) — деньги вернулись: уменьшает расход сделки */
+const REFUND_CATS = ["Возврат от поставщика"];
+const KIND_TITLE = { plan: "Сумма поставщика", charge: "Счёт клиенту", income: "Клиент оплатил", expense: "Расход по сделке", general: "Общий расход" };
+
+/* Чек-лист сделки: что должно быть внесено к каждому этапу.
+   optional — бывает не всегда (не горит оранжевым, если не внесено). */
+const isPart = (kind, part) => e => e.kind === kind && PART_OF[e.cat] === part;
+const isCat = cat => e => e.kind === "expense" && e.cat === cat;
+const CHECKLIST = [
+  /* Товар */
+  /* Окончательное решение: сумма поставщика (без нашего процента) и сумма клиенту (с наценкой) — в одном пункте */
+  { id: "sums", group: "goods", stage: "payment", sums: true, label: "Сумма поставщика и сумма клиенту", short: "суммы сделки", kind: "sums", match: e => e.kind === "plan" || (e.kind === "charge" && e.cat === "Товар") },
+  { id: "payGoods", group: "goods", stage: "payment", label: "Клиент оплатил товар", short: "оплата товара", kind: "income", cat: "Товар · депозит", match: isPart("income", "goods"), part: "goods" },
+  { id: "supplier", group: "goods", stage: "buyout", label: "Оплата поставщику за товар", short: "оплата поставщику", kind: "expense", cat: "Выкуп товара", match: isCat("Выкуп товара"), receipt: true },
+  { id: "goodsExtra", group: "goods", stage: "buyout", label: "Образец, брак, возврат от поставщика", note: "если были · образец с клиента берём не всегда", kind: "expense", cat: "Образец", match: e => (e.kind === "expense" && ["Образец", "Прочее по товару", "Возврат от поставщика", "Компенсация клиенту за брак"].includes(e.cat)) || (e.kind === "charge" && e.cat === "Образец"), optional: true },
+  /* Доставка и логистика */
+  { id: "china", group: "log", stage: "warehouse", label: "Логистика по Китаю", note: "если платили за доставку до склада или до точки сбора", kind: "expense", cat: "Логистика по Китаю", match: isCat("Логистика по Китаю"), optional: true },
+  { id: "pack", group: "log", stage: "warehouse", label: "Упаковка", short: "упаковка", kind: "expense", cat: "Упаковка", match: isCat("Упаковка") },
+  /* Одна форма: счёт перевозчика (наш расход) + счёт клиенту за доставку, сразу видно заработок */
+  { id: "delivery", group: "log", stage: "transit", combo: true, label: "Доставка до Москвы", short: "доставка", kind: "combo", match: e => isPart("charge", "delivery")(e) || isCat("Доставка в Москву")(e) || isPart("income", "delivery")(e) },
+  /* Расходы по Москве всегда в рублях; клиент оплачивает их не всегда — выбор в самой форме */
+  { id: "msk", group: "log", stage: "transit", label: "Расходы по Москве (перегрузка)", note: "если была перегрузка · в рублях · клиент оплачивает не всегда", kind: "expense", cat: "Расходы по Москве", cur: "RUB", match: e => isCat("Расходы по Москве")(e) || isPart("charge", "moscow")(e), optional: true },
+  { id: "payMsk", group: "log", stage: "transit", label: "Клиент оплатил расходы по Москве", short: "оплата расходов по Москве", note: "если был счёт", kind: "income", cat: "Расходы по Москве", match: isPart("income", "moscow"), part: "moscow", optional: true, requiredIfCharged: true }
+];
+/* Прочие кнопки для того, чего нет в чек-листе */
+const EXTRA = [
+  { id: "charge", label: "Счёт клиенту", kind: "charge" },
+  { id: "income", label: "Клиент оплатил", kind: "income" },
+  { id: "other", label: "Другой расход", kind: "expense", cat: "Прочее по сделке" },
+  /* Расходы по Москве сначала записали «за наш счёт», а потом клиент согласился оплатить */
+  { id: "chargeMsk", label: "Выставить клиенту расходы по Москве", kind: "charge", cat: "Расходы по Москве", cur: "RUB" }
+];
+/* Какую категорию предложить в «Счёт клиенту» / «Клиент оплатил» на каждом этапе */
+const STAGE_DEFAULT_CAT = {
+  charge: { request: "Товар", payment: "Товар", transit: "Доставка до Москвы", moscow: "Доставка до Москвы" },
+  income: { request: "Товар · депозит", payment: "Товар · депозит", buyout: "Товар · доплата", transit: "Доставка · полная оплата", moscow: "Доставка · полная оплата", done: "Доставка · полная оплата" }
+};
+const CUR = { RUB: "₽", USDT: "USDT", CNY: "¥", USD: "$" };
+const CUR_ORDER = ["RUB", "USDT", "CNY", "USD"];
+const METHODS = {
+  income: ["Магазин · наличные", "Физ. карта", "Счёт компании", "USDT · вам в Китай", "Юани · вам в Китай", "Другое"],
+  expense: ["Alipay", "WeChat Pay", "Банк Китая", "Наличные ¥", "USDT", "Магазин · наличные ₽", "Физ. карта ₽", "Счёт компании ₽", "Другое"]
+};
+/* Кошельки — где лежат деньги (схема из документа «Схема денег Trust Way»).
+   Россия: магазин (наличные), физ. карта владельца, счёт компании.
+   Китай, у владельца: USDT и юани.
+   Оплата клиента попадает в кошелёк по «Куда пришли деньги», расход списывается по «Чем оплатили».
+   Менеджер меняет рубли на USDT и отправляет владельцу — запись «Отправка в Китай» в «Кассе». */
+const WALLETS = [
+  { id: "office", name: "Магазин", where: "ru", curs: ["RUB", "USD"], hint: "наличные" },
+  { id: "card", name: "Физ. карта", where: "ru", curs: ["RUB"], hint: "ваша российская карта" },
+  { id: "company", name: "Счёт компании", where: "ru", curs: ["RUB"] },
+  { id: "cn_usdt", name: "USDT · у вас в Китае", where: "cn", curs: ["USDT"] },
+  { id: "cn_cny", name: "Юани · у вас в Китае", where: "cn", curs: ["CNY"], hint: "Alipay, WeChat, банк, наличные" },
+  { id: "other", name: "Другое", where: "other", curs: ["RUB", "USDT", "CNY", "USD"] }
+];
+const WALLET = Object.fromEntries(WALLETS.map(w => [w.id, w]));
+/* Старые названия способов оплаты тоже понимаем — записи, внесённые раньше, попадают в нужный кошелёк */
+const METHOD_WALLET = {
+  "Магазин · наличные": "office", "Наличные · офис TW": "office", "Магазин · наличные ₽": "office", "Наличные ₽ · Москва": "office",
+  "Физ. карта": "card", "Карта физлица": "card", "Физ. карта ₽": "card", "Карта / счёт ₽": "card",
+  "Счёт компании": "company", "Счёт компании ₽": "company",
+  "USDT · вам в Китай": "cn_usdt", "USDT на кошелёк": "cn_usdt", "USDT на кошелёк · Китай": "cn_usdt", "USDT": "cn_usdt",
+  "Юани · вам в Китай": "cn_cny", "Юани (Alipay / WeChat)": "cn_cny", "Alipay": "cn_cny", "WeChat Pay": "cn_cny", "Банк Китая": "cn_cny", "Наличные ¥": "cn_cny"
+};
+function walletOf(method, cur) {
+  const w = METHOD_WALLET[method] || "other";
+  if (cur === "CNY" && WALLET[w].where === "ru") return "cn_cny"; /* юани — всегда в Китае */
+  if (cur === "USDT" && WALLET[w].where === "ru") return "cn_usdt"; /* USDT клиенты платят вам в Китай */
+  return w;
+}
+const DELIVERY = ["не выбрано", "Авиа", "Авто", "Ж/Д"];
+const EDIT_DAYS = 30;
+
+/* ================================================================== */
+/*  Состояние                                                          */
+/* ================================================================== */
+const S = {
+  db: null, user: null, assets: null, myId: null, isOwner: false,
+  dealUids: [], names: {}, orders: new Map(), entries: new Map(), transfers: new Map(),
+  general: [], exchanges: [], bonus: {}, rates: {},
+  tab: null, open: null, month: monthOf(today()),
+  list: { filter: "open", q: "", mgr: "all" },
+  form: null, oform: null, xform: null, editOrder: null,
+  pending: null, loaded: false, msg: null
+};
+
+/* ================================================================== */
+/*  Утилиты                                                            */
+/* ================================================================== */
+function today() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
+function monthOf(date) { return String(date || "").slice(0, 7); }
+const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
+function monthName(m) { const [y, mm] = m.split("-"); return `${MONTHS[+mm - 1] || mm} ${y}`; }
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+const nf = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 });
+const nf0 = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
+function money(n, cur = "CNY", round = false) { if (n == null || !isFinite(n)) return "—"; return `${(round ? nf0 : nf).format(n)} ${CUR[cur] || cur}`; }
+function num(s) { const v = parseFloat(String(s ?? "").replace(/\s/g, "").replace(",", ".")); return isFinite(v) ? v : NaN; }
+function inNum(n, d = 4) { if (!isFinite(n)) return ""; return String(+n.toFixed(d)).replace(".", ","); }
+function fmtDate(d) { if (!d) return ""; const [y, m, dd] = d.split("-"); return `${dd}.${m}.${y.slice(2)}`; }
+function r2(n) { return Math.round(n * 100) / 100; }
+/* Курс хранится в привычном виде: рубль — «₽ за 1 ¥», USDT и доллар — «¥ за 1 единицу». */
+function rateUnit(cur) { return cur === "RUB" ? "₽ за 1 ¥" : cur === "USDT" ? "¥ за 1 USDT" : cur === "USD" ? "¥ за 1 $" : ""; }
+function toCny(a, cur, r) { if (cur === "CNY") return a; if (!(r > 0)) return NaN; return cur === "RUB" ? a / r : a * r; }
+function rateFrom(a, cur, y) { if (!(a > 0 && y > 0)) return NaN; return cur === "RUB" ? a / y : y / a; }
+function curRate(cur) { const r = S.rates; return cur === "RUB" ? r.rubPerCny : cur === "USDT" ? r.cnyPerUsdt : cur === "USD" ? r.cnyPerUsd : 1; }
+function cnyToRub(cny) { return S.rates.rubPerCny > 0 ? cny * S.rates.rubPerCny : NaN; }
+function approxRub(cny) { const v = cnyToRub(cny); return isFinite(v) ? `≈ ${money(v, "RUB", true)}` : ""; }
+function newCode() {
+  const d = new Date();
+  return `TW-${String(d.getFullYear()).slice(2)}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+}
+function nameOf(uid) { if (uid === S.myId) return "Вы"; return S.names[uid] || "Менеджер"; }
+function setStatus(text, warn) { const el = document.getElementById("status"); if (!text) { el.hidden = true; return; } el.hidden = false; el.className = "notice" + (warn ? " warn" : ""); el.textContent = text; }
+function gate(title, text) { document.getElementById("tabs").hidden = true; document.getElementById("main").innerHTML = `<div class="gate"><h2>${esc(title)}</h2><p>${esc(text)}</p></div>`; }
+
+/* ---------- выборки ---------- */
+function allOrders() { const out = []; for (const [uid, arr] of S.orders) for (const o of arr) out.push({ ...o, uid }); return out; }
+function allEntries() { const out = []; for (const [uid, arr] of S.entries) for (const e of arr) out.push({ ...e, uid }); return out; }
+function findOrder(uid, id) { return (S.orders.get(uid) || []).find(o => o.id === id); }
+function orderEntries(uid, id) { return (S.entries.get(uid) || []).filter(e => e.orderId === id).map(e => ({ ...e, uid })); }
+
+/* Деньги по сделке: счёт и оплаты по трём частям, расходы по статьям, прибыль. */
+function dealMoney(uid, id) {
+  const list = orderEntries(uid, id);
+  const parts = {};
+  for (const [p] of PARTS) parts[p] = { charge: {}, paid: {}, chargeCny: 0, paidCny: 0 };
+  const exp = {}; let expCny = 0, paidCny = 0, chargeCny = 0, planCny = 0;
+  for (const e of list) {
+    let c = e.cny || 0;
+    if (e.kind === "plan") { planCny += c; continue; }
+    if (e.kind === "expense" && REFUND_CATS.includes(e.cat)) c = -c;
+    if (e.kind === "charge" || e.kind === "income") {
+      const p = parts[PART_OF[e.cat] || "goods"];
+      const side = e.kind === "charge" ? "charge" : "paid";
+      p[side][e.cur] = (p[side][e.cur] || 0) + e.amount;
+      p[side + "Cny"] += c;
+      if (e.kind === "charge") chargeCny += c; else paidCny += c;
+    } else if (e.kind === "expense") {
+      exp[e.cat] = exp[e.cat] || { cny: 0, by: {} };
+      exp[e.cat].cny += c; exp[e.cat].by[e.cur] = (exp[e.cat].by[e.cur] || 0) + e.amount; expCny += c;
+    }
+  }
+  for (const [p] of PARTS) parts[p].debt = partDebt(list, p);
+  const debtCny = PARTS.reduce((s, [p]) => { const d = parts[p].debt; return s + (d && d.amount > (d.cur === "CNY" ? 1 : 0.5) ? Math.max(0, d.cny) : 0); }, 0);
+  /* Разделение: товар отдельно, доставка и логистика отдельно */
+  const g = {};
+  for (const key of ["goods", "log", "other"]) {
+    const ps = Object.entries(PART_GROUP).filter(([, v]) => v === key).map(([p]) => p);
+    const cats = Object.entries(EXP_GROUP).filter(([, v]) => v === key).map(([c]) => c);
+    const paid = ps.reduce((s, p) => s + parts[p].paidCny, 0);
+    const charge = ps.reduce((s, p) => s + parts[p].chargeCny, 0);
+    const ex = cats.reduce((s, c) => s + (exp[c]?.cny || 0), 0);
+    g[key] = { parts: ps, cats, paidCny: paid, chargeCny: charge, expCny: ex, profit: paid - ex };
+  }
+  return { list, parts, exp, expCny, paidCny, chargeCny, planCny, profit: paidCny - expCny, debtCny, g };
+}
+const PART_GROUP = { goods: "goods", delivery: "log", moscow: "log" };
+const EXP_GROUP = { "Выкуп товара": "goods", "Образец": "goods", "Возврат от поставщика": "goods", "Компенсация клиенту за брак": "goods", "Прочее по товару": "goods", "Логистика по Китаю": "log", "Упаковка": "log", "Доставка в Москву": "log", "Расходы по Москве": "log", "Прочее по сделке": "other" };
+function debtCell(d, has) {
+  if (!d) return has ? `<span class="muted">нет счёта</span>` : `<span class="muted">—</span>`;
+  if (Math.abs(d.amount) < (d.cur === "CNY" ? 1 : 0.5)) return `<span class="pos">оплачено</span>`;
+  return d.amount < 0 ? `переплата ${money(-d.amount, d.cur, true)}` : `<span class="neg">долг ${money(d.amount, d.cur, true)}</span>`;
+}
+function moneyBlock(m, key) {
+  const G = m.g[key];
+  const title = key === "goods" ? "Товар" : "Доставка и логистика";
+  const sub = key === "goods" ? "Оплата клиента за товар и выкуп у поставщика." : "Оплата клиента за доставку и все наши расходы на логистику.";
+  const partLabel = { goods: "Товар", delivery: "Доставка до Москвы", moscow: "Расходы по Москве" };
+  const clientRows = G.parts.map(p => {
+    const x = m.parts[p]; const has = Object.keys(x.charge).length || Object.keys(x.paid).length;
+    if (!has && p === "moscow") return "";
+    return `<tr><td>${key === "goods" ? "Клиент" : partLabel[p]}<div class="small muted">счёт ${byCur(x.charge)} · оплачено ${byCur(x.paid)}</div></td><td class="num">${debtCell(x.debt, has)}</td></tr>`;
+  }).join("");
+  const expRows = G.cats.map(c => m.exp[c]
+    ? `<tr><td>${esc(c)}${Object.keys(m.exp[c].by).some(k => k !== "CNY") ? `<div class="small muted">${byCur(m.exp[c].by)}</div>` : ""}</td><td class="num">− ${money(m.exp[c].cny, "CNY", true)}</td></tr>`
+    : (c === "Расходы по Москве" || c === "Логистика по Китаю" ? "" : `<tr><td class="muted">${esc(c)}</td><td class="num muted">—</td></tr>`)).join("");
+  return `<section class="card">
+    <h2>${title}</h2><p class="sub">${sub}</p>
+    <div class="tbl-wrap"><table><tbody>
+      ${clientRows}
+      <tr class="total"><td>Клиент оплатил</td><td class="num">${money(G.paidCny, "CNY", true)}</td></tr>
+      ${expRows}
+      <tr class="total"><td>${key === "goods" ? "Прибыль на товаре" : "Результат по доставке"}</td><td class="num ${G.profit >= 0 ? "pos" : "neg"}">${money(G.profit, "CNY", true)}</td></tr>
+    </tbody></table></div>
+  </section>`;
+}
+/* Долг — в валюте счёта. USDT и доллар засчитываются один к одному.
+   Оплаты в других валютах переводятся в валюту счёта по курсу самого счёта.
+   Если счёт выставлен в нескольких валютах — долг в юанях. */
+const DOLLAR = c => c === "USD" || c === "USDT";
+const sameMoney = (a, b) => a === b || (DOLLAR(a) && DOLLAR(b));
+/* Сколько оплата засчитывается в счёт (в валюте счёта) */
+function appliedOf(e, cur, k) {
+  if (e.applyCur === cur && isFinite(e.applied)) return e.applied;
+  if (sameMoney(e.cur, cur)) return e.amount;
+  return k > 0 ? (e.cny || 0) / k : 0;
+}
+/* Счёт по части сделки: валюта, сумма, курс счёта (k — юаней за 1 единицу) и остаток */
+function invoiceOf(list, part, excludeId) {
+  const ents = list.filter(e => e.id !== excludeId);
+  const charges = ents.filter(e => e.kind === "charge" && PART_OF[e.cat] === part);
+  if (!charges.length) return null;
+  const curs = [...new Set(charges.map(e => e.cur))];
+  if (curs.length !== 1) return null;
+  const cur = curs[0];
+  const total = charges.reduce((s, e) => s + e.amount, 0);
+  const k = total > 0 ? charges.reduce((s, e) => s + (e.cny || 0), 0) / total : 0;
+  const paid = ents.filter(e => e.kind === "income" && PART_OF[e.cat] === part).reduce((s, e) => s + appliedOf(e, cur, k), 0);
+  return { part, cur, total, k, paid, remaining: total - paid };
+}
+function partDebt(list, part) {
+  const charges = list.filter(e => e.kind === "charge" && PART_OF[e.cat] === part);
+  if (!charges.length) return null;
+  const inv = invoiceOf(list, part);
+  if (inv) return { amount: inv.remaining, cur: inv.cur, cny: inv.remaining * inv.k };
+  const vc = charges.reduce((s, e) => s + (e.cny || 0), 0) - list.filter(e => e.kind === "income" && PART_OF[e.cat] === part).reduce((s, e) => s + (e.cny || 0), 0);
+  return { amount: vc, cur: "CNY", cny: vc };
+}
+/* Оплата в другой валюте, чем счёт: кросс-курс «1 крупная = N мелких» */
+const RANK = c => DOLLAR(c) ? 3 : c === "CNY" ? 2 : 1;
+function cnyPer(c, inv) {
+  if (inv && c === inv.cur && inv.k > 0) return inv.k;
+  const r = S.rates;
+  return c === "CNY" ? 1 : c === "RUB" ? (r.rubPerCny > 0 ? 1 / r.rubPerCny : NaN) : c === "USDT" ? r.cnyPerUsdt : r.cnyPerUsd;
+}
+function crossNeeded(f) { return f.kind === "income" && f.inv && !sameMoney(f.cur, f.inv.cur); }
+/* Сумму и курс вписывают сами: клиент может принести больше счёта — это переплата.
+   Для полной оплаты и доплаты остаток подставляется подсказкой, пока сумму не поменяли руками. */
+function autoRate() { return false; }
+function derivedXr(f) {
+  const a = num(f.amount), R = f.inv?.remaining;
+  if (!(a > 0) || !(R > 0)) return NaN;
+  return f.inv.cur === crossPair(f).big ? a / R : R / a;
+}
+function crossPair(f) { const a = f.inv.cur, b = f.cur; return RANK(a) >= RANK(b) ? { big: a, small: b } : { big: b, small: a }; }
+function defaultXr(f) { const { big, small } = crossPair(f); return cnyPer(big, f.inv) / cnyPer(small, f.inv); }
+/* сумма оплаты в валюте оплаты → засчитано в валюте счёта, и обратно */
+function toApplied(f, a) { if (!crossNeeded(f)) return a; if (autoRate(f)) return a > 0 ? f.inv.remaining : NaN; const xr = num(f.xr); if (!(xr > 0)) return NaN; return f.inv.cur === crossPair(f).big ? a / xr : a * xr; }
+function fromApplied(f, v) { if (!crossNeeded(f)) return v; const xr = num(f.xr); if (!(xr > 0)) return NaN; return f.inv.cur === crossPair(f).big ? v * xr : v / xr; }
+function appliedText(f) {
+  if (f.kind !== "income" || !f.inv) return "";
+  const a = num(f.amount); let ap = toApplied(f, a);
+  if (!(a > 0) || !isFinite(ap)) return `Осталось по счёту: ${money(Math.max(0, f.inv.remaining), f.inv.cur)}`;
+  if (Math.abs(f.inv.remaining - ap) < 0.5) ap = f.inv.remaining;
+  if (autoRate(f)) {
+    const xr = derivedXr(f), pr = crossPair(f);
+    return `Засчитается вся сумма: ${money(f.inv.remaining, f.inv.cur)} — счёт закроется (1 ${CUR[pr.big]} = ${isFinite(xr) ? inNum(xr, 4) : "—"} ${CUR[pr.small]})`;
+  }
+  const left = f.inv.remaining - ap;
+  return `Засчитается: ${money(ap, f.inv.cur)} · после оплаты останется ${money(Math.max(0, left), f.inv.cur)}${left < -0.5 ? ` (переплата ${money(-left, f.inv.cur)})` : ""}`;
+}
+/* Подставить остаток долга в выбранной валюте оплаты */
+function prefillPayment(f) {
+  if (!f.inv) return;
+  f.amountTouched = false;
+  f.full = FULL_CATS.includes(f.cat) && f.inv.remaining > 0.005;
+  if (crossNeeded(f)) f.xr = inNum(defaultXr(f), 4);
+  if (f.full) {
+    const v = fullAmount(f);
+    f.amount = isFinite(v) ? inNum(r2(v), 2) : "";
+  }
+  f.rate = inNum(curRate(f.cur)); f.driver = "rate";
+  const y = toCny(num(f.amount), f.cur, num(f.rate)); f.cny = f.cur !== "CNY" && isFinite(y) && num(f.amount) > 0 ? inNum(r2(y), 2) : "";
+}
+/* Полная оплата: сумма в валюте оплаты = остаток × курс */
+function fullAmount(f) {
+  if (!crossNeeded(f)) return f.inv.remaining;
+  const xr = num(f.xr); if (!(xr > 0)) return NaN;
+  return f.inv.cur === crossPair(f).big ? f.inv.remaining * xr : f.inv.remaining / xr;
+}
+function updateApplied() { const el = document.getElementById("f-applied"); if (el && S.form) el.textContent = appliedText(S.form); }
+/* Меняют курс — подсказка суммы пересчитывается, пока сумму не вписали руками. Сумма курс не меняет. */
+function linkFull(changed) {
+  const f = S.form; if (!f || f.kind !== "income" || !f.inv) return;
+  if (changed === "amount") { f.amountTouched = true; return; }
+  if (changed === "xr" && f.full && !f.amountTouched && f.mode !== "edit") {
+    const v = fullAmount(f); if (!isFinite(v)) return;
+    f.amount = inNum(r2(v), 2); const el = document.getElementById("f-amount"); if (el) el.value = f.amount;
+  }
+}
+function debtText(m) {
+  const parts = PARTS.map(([p, label]) => [label, m.parts[p].debt]).filter(([, d]) => d && d.amount > (d.cur === "CNY" ? 1 : 0.5));
+  return parts.map(([label, d]) => `${label}: ${money(d.amount, d.cur, true)}`).join(" · ");
+}
+/* Состояние каждого пункта чек-листа: done / part / due / opt / later */
+function checklist(o, m) {
+  const si = o.status === "cancelled" ? -1 : (STAGE_IDX[o.status] ?? -1);
+  return CHECKLIST.map(c => {
+    const ents = m.list.filter(c.match);
+    const ci = STAGE_IDX[c.stage];
+    const reached = si >= ci;
+    const optional = c.optional && !(c.requiredIfCharged && m.parts[c.part].debt);
+    let state = ents.length ? "done" : reached ? (optional ? "opt" : "due") : (optional ? "opt" : "later");
+    let extra = "";
+    if (c.part && ents.length) {
+      const d = m.parts[c.part].debt;
+      if (d && d.amount > (d.cur === "CNY" ? 1 : 0.5)) {
+        extra = `осталось ${money(d.amount, d.cur, true)}`;
+        state = si >= STAGE_IDX.moscow ? "due" : "part";
+      } else if (d && d.amount < -(d.cur === "CNY" ? 1 : 0.5)) extra = `переплата ${money(-d.amount, d.cur, true)}`;
+    }
+    const by = {}; for (const e of ents) by[e.cur] = (by[e.cur] || 0) + e.amount;
+    let sum = ents.length ? byCur(by) : "";
+    if (c.sums) {
+      const plan = ents.filter(e => e.kind === "plan"), cli = ents.filter(e => e.kind === "charge");
+      const pc = plan.reduce((s2, e) => s2 + e.amount, 0), cb = {}; for (const e of cli) cb[e.cur] = (cb[e.cur] || 0) + e.amount;
+      const cliCny = cli.reduce((s2, e) => s2 + (e.cny || 0), 0);
+      sum = [plan.length ? `поставщик ${money(pc, "CNY")}` : "", cli.length ? `клиенту ${byCur(cb)}` : "", plan.length && cli.length ? `наценка ${money(cliCny - pc, "CNY", true)}` : ""].filter(Boolean).join(" · ");
+      const miss = [!plan.length ? "нет суммы поставщика" : "", !cli.length ? "нет суммы клиенту" : ""].filter(Boolean);
+      if (ents.length && miss.length) { state = "due"; extra = miss.join(", "); }
+    }
+    if (c.id === "supplier" && m.planCny > 0) {
+      const paidSup = m.exp["Выкуп товара"]?.cny || 0, left = m.planCny - paidSup;
+      if (ents.length && left > 1) { extra = `оплачено ${money(paidSup, "CNY", true)} из ${money(m.planCny, "CNY", true)} · осталось ${money(left, "CNY", true)}`; state = si >= STAGE_IDX.warehouse ? "due" : "part"; }
+    }
+    if (c.id === "goodsExtra" && ents.length) {
+      const ex = {}, bl = {}, rf = {};
+      for (const e of ents) { const t = e.kind === "charge" ? bl : REFUND_CATS.includes(e.cat) ? rf : ex; t[e.cur] = (t[e.cur] || 0) + e.amount; }
+      sum = [Object.keys(ex).length ? `расход ${byCur(ex)}` : "", Object.keys(rf).length ? `возврат от поставщика ${byCur(rf)}` : "", Object.keys(bl).length ? `выставлено клиенту ${byCur(bl)}` : Object.keys(ex).length ? "за наш счёт" : ""].filter(Boolean).join(" · ");
+    }
+    if (c.id === "msk" && ents.length) {
+      const ex = {}, bl = {};
+      for (const e of ents) { const t = e.kind === "charge" ? bl : ex; t[e.cur] = (t[e.cur] || 0) + e.amount; }
+      sum = [Object.keys(ex).length ? `расход ${byCur(ex)}` : "", Object.keys(bl).length ? `платит клиент ${byCur(bl)}` : "за наш счёт"].filter(Boolean).join(" · ");
+    }
+    if (c.combo) {
+      /* Доставка: расход перевозчика, счёт клиенту и оплата клиента — в одном окне */
+      const car = {}, cli = {}, pay = {};
+      for (const e of ents) { const t = e.kind === "charge" ? cli : e.kind === "income" ? pay : car; t[e.cur] = (t[e.cur] || 0) + e.amount; }
+      const hasCar = Object.keys(car).length > 0, hasCli = Object.keys(cli).length > 0, hasPay = Object.keys(pay).length > 0;
+      const d = m.parts.delivery.debt, left = d && d.amount > (d.cur === "CNY" ? 1 : 0.5);
+      sum = [hasCar ? `перевозчик ${byCur(car)}` : "", hasCli ? `клиенту ${byCur(cli)}` : "", hasPay ? `оплачено ${byCur(pay)}` : ""].filter(Boolean).join(" · ");
+      const miss = [!hasCar ? "нет расхода перевозчика" : "", !hasCli ? "нет счёта клиенту" : "", hasCli && !hasPay ? "клиент не оплатил" : "", hasPay && left ? `осталось ${money(d.amount, d.cur, true)}` : ""].filter(Boolean);
+      if (!miss.length && ents.length) state = "done";
+      else if (ents.length) { state = reached ? "due" : "part"; extra = miss.join(", "); }
+    }
+    return { ...c, ents, state, extra, sum, current: ci === si, hasReceipt: ents.some(e => e.receipt) };
+  });
+}
+/* Расчёт заработка на доставке для формы «Доставка до Москвы» */
+function comboCalc(f, m) {
+  const cur = f.cur, rate = cur === "CNY" ? 1 : num(f.rate);
+  const car = num(f.carrier), cli = num(f.client);
+  const toC = v => toCny(v, cur, rate), fromC = v => cur === "CNY" ? v : cur === "RUB" ? v * rate : v / rate;
+  const china = (m.exp["Логистика по Китаю"]?.cny || 0) + (m.exp["Упаковка"]?.cny || 0);
+  const prevCar = m.exp["Доставка в Москву"]?.cny || 0, prevCli = m.parts.delivery.chargeCny || 0;
+  const lines = [];
+  if (china > 0) lines.push(`Уже потратили на логистику по Китаю и упаковку: ${money(china, "CNY", true)}${rate > 0 && cur !== "CNY" ? ` (≈ ${money(fromC(china), cur, true)})` : ""}.`);
+  if (car > 0 && rate > 0) {
+    const min = fromC(toC(car) + china + prevCar - prevCli);
+    lines.push(`Чтобы не уйти в минус, клиенту нужно выставить не меньше ${money(Math.max(0, min), cur, true)}.`);
+  }
+  if (car > 0 && cli > 0) lines.push(`Наценка к счёту перевозчика: <b>${money(cli - car, cur)}</b>.`);
+  if (cli > 0 && rate > 0) {
+    const earnC = toC(cli) + prevCli - (car > 0 ? toC(car) : 0) - prevCar - china;
+    lines.push(`<b class="${earnC >= 0 ? "pos" : "neg"}">Заработаем на доставке: ${money(fromC(earnC), cur, true)}</b>${cur !== "CNY" ? ` <span class="muted">(≈ ${money(earnC, "CNY", true)})</span>` : ""} — когда клиент оплатит счёт.`);
+  }
+  if (cur !== "CNY" && rate > 0 && china > 0) lines.push(`<span class="muted">Юани пересчитаны по текущему курсу: ${inNum(rate, 4)} ${rateUnit(cur)}.</span>`);
+  return lines.join("<br>");
+}
+function missingOf(o, m) { return checklist(o, m).filter(r => r.state === "due").map(r => r.short || r.label.toLowerCase()); }
+function byCur(obj) { const parts = CUR_ORDER.filter(c => obj[c]).map(c => money(obj[c], c)); return parts.length ? parts.join(" + ") : "—"; }
+function canEditEntry(e) {
+  if (S.isOwner) return true;
+  return e.createdBy === S.myId && (Date.now() - (e.createdAt || 0)) < EDIT_DAYS * 864e5;
+}
+
+/* ================================================================== */
+/*  Подключение                                                        */
+/* ================================================================== */
+async function boot() {
+  const ns = window.claude;
+  if (!ns || typeof ns.use !== "function") { gate("Откройте страницу в Claude", "Учёт работает внутри Claude, когда вы вошли в свой аккаунт."); return; }
+  const [db, user, assets] = await Promise.all([ns.use("db"), ns.use("user"), ns.use("assets")]);
+  if (!db) { gate("Нет доступа к базе", "Войдите в аккаунт Claude и откройте ссылку снова. Если вы менеджер, попросите владельца выдать вам доступ к этой странице."); return; }
+  S.db = db; S.user = user; S.assets = assets;
+  S.isOwner = (await user?.isOwner()) ?? false;
+  S.myId = (await user?.id()) ?? null;
+  if (!S.myId) { gate("Не удалось определить пользователя", "Войдите в аккаунт Claude и откройте ссылку снова."); return; }
+
+  const me = await user.me();
+  document.getElementById("who-am-i").textContent = me.name || "";
+  const role = document.getElementById("role"); role.hidden = false; role.textContent = S.isOwner ? "Владелец" : "Менеджер";
+
+  try {
+    const ref = db.doc("deals/" + S.myId);
+    const snap = await ref.get();
+    if (!snap.exists) await ref.set({ joinedAt: Date.now() });
+  } catch (e) {
+    if (!S.isOwner) { gate("Доступ только на просмотр", "Чтобы вести сделки, попросите владельца выдать вам доступ с правом вносить изменения."); return; }
+  }
+
+  const timer = setTimeout(() => { if (!S.loaded) setStatus("База пока не отвечает. Данные могут быть неполными, проверьте интернет.", true); }, 10000);
+  const onErr = e => { clearTimeout(timer); setStatus(e?.code === "revoked" ? "Доступ к странице изменился. Обновите её." : "Не удалось загрузить часть данных. Обновите страницу.", true); };
+  const loaded = meta => { if (!meta.fromCache && !S.loaded) { S.loaded = true; clearTimeout(timer); setStatus(""); } };
+
+  const watched = new Set();
+  const watchUid = uid => {
+    if (watched.has(uid)) return; watched.add(uid);
+    db.collection(`deals/${uid}/orders`).onSnapshot(snap => { S.orders.set(uid, snap.docs.map(d => { const x = { id: d.id, ...d.data() }; if (x.status === "request") x.status = "payment"; return x; })); loaded(snap.metadata); render(); }, onErr);
+    db.collection(`deals/${uid}/entries`).onSnapshot(snap => { S.entries.set(uid, snap.docs.map(d => ({ id: d.id, ...d.data() }))); render(); }, onErr);
+    /* Переводы денег из России в Китай: пока менеджер не перевёл, это его долг перед Trust Way */
+    db.collection(`deals/${uid}/transfers`).onSnapshot(snap => { S.transfers.set(uid, snap.docs.map(d => ({ id: d.id, ...d.data() }))); render(); }, onErr);
+  };
+  watchUid(S.myId);
+
+  db.doc("rates/current").onSnapshot(snap => { S.rates = snap.exists ? { ...snap.data() } : {}; render(); }, onErr);
+
+  if (S.isOwner) {
+    db.collection("deals").onSnapshot(snap => {
+      S.dealUids = snap.docs.map(d => d.id);
+      if (!S.dealUids.includes(S.myId)) S.dealUids.push(S.myId);
+      S.dealUids.forEach(watchUid);
+      refreshNames(); render();
+    }, onErr);
+    db.collection("company/main/general").onSnapshot(snap => { S.general = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, onErr);
+    db.collection("company/main/exchanges").onSnapshot(snap => { S.exchanges = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, onErr);
+    db.collection("bonus").onSnapshot(snap => { S.bonus = Object.fromEntries(snap.docs.map(d => [d.id, d.data().percent])); render(); }, onErr);
+  } else {
+    S.dealUids = [S.myId];
+    db.doc("bonus/" + S.myId).onSnapshot(snap => { S.bonus = { [S.myId]: snap.exists ? snap.data().percent : null }; render(); }, () => {});
+  }
+
+  S.tab = "deals";
+  buildTabs(); bindEvents(); render(true);
+}
+async function refreshNames() {
+  if (!S.user) return;
+  const ps = await S.user.profiles(S.dealUids);
+  S.names = Object.fromEntries(Object.entries(ps).map(([id, p]) => [id, p.name || ""]));
+  render();
+}
+
+/* ================================================================== */
+/*  Вкладки и отрисовка                                                */
+/* ================================================================== */
+function tabList() {
+  return S.isOwner
+    ? [["deals", "Сделки"], ["summary", "Сводка"], ["cash", "Касса"], ["settings", "Настройки"]]
+    : [["deals", "Сделки"], ["mine", "Мои итоги"], ["cash", "Касса"]];
+}
+function buildTabs() {
+  const nav = document.getElementById("tabs"); nav.hidden = false;
+  nav.innerHTML = tabList().map(([id, label]) => `<button class="tab" role="tab" data-tab="${id}" aria-selected="${S.tab === id}">${label}</button>`).join("");
+}
+let queued = false, forceNext = false, blurWait = false;
+function render(force) {
+  if (!S.db || !S.tab) return;
+  if (force) forceNext = true;
+  if (queued) return; queued = true;
+  requestAnimationFrame(() => { queued = false; const f = forceNext; forceNext = false; draw(f); });
+}
+function draw(force) {
+  const main = document.getElementById("main");
+  const a = document.activeElement;
+  if (!force && a && main.contains(a) && a.matches("input, textarea")) {
+    if (!blurWait) { blurWait = true; a.addEventListener("blur", () => { blurWait = false; render(); }, { once: true }); }
+    return;
+  }
+  const y = window.scrollY;
+  let html = "";
+  if (S.tab === "deals") html = S.open ? dealPage() : dealsList();
+  else if (S.tab === "summary") html = summaryPage();
+  else if (S.tab === "mine") html = minePage();
+  else if (S.tab === "cash") html = S.isOwner ? cashPage() : mgrCashPage();
+  else if (S.tab === "settings") html = settingsPage();
+  main.innerHTML = html;
+  const now = main.querySelector(".step.now"), st = now?.parentElement;
+  if (st) st.scrollLeft = Math.max(0, now.offsetLeft - st.offsetLeft - 24);
+  if (!force) window.scrollTo(0, y);
+}
+
+/* ================================================================== */
+/*  Сделки: список                                                     */
+/* ================================================================== */
+function dealsList() {
+  const of = S.oform;
+  return `<div class="panel">
+    ${of ? newDealForm() : `<div class="row"><button class="btn" data-act="new-deal">+ Новая сделка</button><span class="spacer"></span></div>`}
+    <div class="filters">
+      <select data-act="list-filter" aria-label="Какие сделки показать">
+        <option value="open" ${S.list.filter === "open" ? "selected" : ""}>В работе</option>
+        <option value="todo" ${S.list.filter === "todo" ? "selected" : ""}>Нужно внести</option>
+        <option value="debt" ${S.list.filter === "debt" ? "selected" : ""}>С долгом клиента</option>
+        <option value="done" ${S.list.filter === "done" ? "selected" : ""}>Выданные</option>
+        <option value="all" ${S.list.filter === "all" ? "selected" : ""}>Все</option>
+      </select>
+      ${S.isOwner ? `<select data-act="list-mgr" aria-label="Менеджер"><option value="all">Все менеджеры</option>${S.dealUids.map(u => `<option value="${esc(u)}" ${S.list.mgr === u ? "selected" : ""}>${esc(nameOf(u))}</option>`).join("")}</select>` : ""}
+      <input id="q" type="search" placeholder="Клиент или номер" value="${esc(S.list.q)}" autocomplete="off" aria-label="Поиск">
+    </div>
+    <div class="deals" id="deal-list">${dealCards()}</div>
+  </div>`;
+}
+function dealCards() {
+  const q = S.list.q.trim().toLowerCase();
+  const rows = allOrders()
+    .filter(o => S.list.mgr === "all" || o.uid === S.list.mgr)
+    .filter(o => !q || `${o.client} ${o.clientCode || ""} ${o.code} ${o.what || ""}`.toLowerCase().includes(q))
+    .map(o => { const m = dealMoney(o.uid, o.id); return { o, m, miss: o.status === "cancelled" ? [] : missingOf(o, m) }; })
+    .filter(({ o, m, miss }) => S.list.filter === "all" ? true
+      : S.list.filter === "done" ? o.status === "done"
+      : S.list.filter === "debt" ? m.debtCny > 1 && o.status !== "cancelled"
+      : S.list.filter === "todo" ? miss.length > 0
+      : o.status !== "done" && o.status !== "cancelled")
+    .sort((a, b) => (b.o.updatedAt || b.o.createdAt || 0) - (a.o.updatedAt || a.o.createdAt || 0));
+  if (!rows.length) return `<div class="card empty">${allOrders().length ? "Здесь сделок нет. Поменяйте фильтр." : "Сделок пока нет. Нажмите «+ Новая сделка», когда клиент согласился."}</div>`;
+  return rows.map(({ o, m, miss }) => {
+    const idx = STAGE_IDX[o.status] ?? -1;
+    const debt = debtText(m);
+    const live = o.status !== "cancelled";
+    return `<button class="deal ${live ? (miss.length ? "todo" : "ok") : ""}" data-act="open-deal" data-uid="${esc(o.uid)}" data-id="${esc(o.id)}">
+      <div class="deal-head"><b>${esc(o.client || "без имени")}</b>${o.clientCode ? `<span class="code">код ${esc(o.clientCode)}</span>` : ""}<span class="code">${esc(o.code)}</span><span class="spacer"></span><span class="stage ${o.status === "done" || o.status === "cancelled" ? "done" : ""}">${esc(STAGE_NAME[o.status] || "—")}</span></div>
+      ${o.what ? `<div class="what">${esc(o.what)}</div>` : ""}
+      ${live ? `<div class="progress" aria-hidden="true">${STAGES.map((_, i) => `<i class="${i <= idx ? "on" : ""}"></i>`).join("")}</div>` : ""}
+      ${live ? `<div>${miss.length ? `<span class="flag todo">! Не внесено: ${esc(miss.join(", "))}</span>` : `<span class="flag ok">✓ Всё внесено</span>`}</div>` : ""}
+      <div class="meta">
+        ${S.isOwner ? `<span>Менеджер: <b>${esc(nameOf(o.uid))}</b></span>` : ""}
+        <span>Оплачено: <b>${money(m.paidCny, "CNY", true)}</b></span>
+        <span>Прибыль: <b class="${m.profit >= 0 ? "pos" : "neg"}">${money(m.profit, "CNY", true)}</b></span>
+        ${debt ? `<span class="neg">Долг · ${esc(debt)}</span>` : ""}
+      </div>
+    </button>`;
+  }).join("");
+}
+function newDealForm() {
+  const f = S.oform;
+  return `<div class="form">
+    <div class="form-head"><b>Новая сделка</b><span class="spacer"></span><button class="link" data-act="cancel-deal-form">Закрыть</button></div>
+    <div class="grid">
+      <div class="f"><label for="o-client">Имя клиента</label><input id="o-client" data-bind="oform.client" value="${esc(f.client)}" placeholder="Как в CRM" autocomplete="off"></div>
+      <div class="f"><label for="o-ccode">Код клиента</label><input id="o-ccode" data-bind="oform.clientCode" value="${esc(f.clientCode || "")}" placeholder="Например: TW-125" autocomplete="off"></div>
+      ${S.isOwner ? `<div class="f"><label for="o-mgr">Менеджер сделки</label><select id="o-mgr" data-bind="oform.mgr">${S.dealUids.map(u => `<option value="${esc(u)}" ${f.mgr === u ? "selected" : ""}>${esc(u === S.myId ? "Вы (владелец)" : nameOf(u))}</option>`).join("")}</select><span class="hint-t">Менеджер появляется здесь после первого входа в учёт.</span></div>` : ""}
+    </div>
+    <p class="hint-t" style="margin:0">Сделку заводим, когда клиент согласился и оплатил. Всё остальное о клиенте — в CRM.</p>
+    <div class="row"><button class="btn" data-act="save-deal">Создать сделку</button><span id="o-msg" role="status" class="${S.msg?.where === "deal" ? S.msg.cls : ""}">${S.msg?.where === "deal" ? esc(S.msg.text) : ""}</span></div>
+  </div>`;
+}
+
+/* ================================================================== */
+/*  Сделка: страница                                                   */
+/* ================================================================== */
+function dealPage() {
+  const { uid, id } = S.open;
+  const o = findOrder(uid, id);
+  if (!o) return `<div class="panel"><button class="link" data-act="back">← Все сделки</button><div class="card empty">Сделка не найдена. Возможно, её удалили.</div></div>`;
+  const m = dealMoney(uid, id);
+  const idx = STAGE_IDX[o.status] ?? -1;
+  const f = S.form && S.form.ctx === "deal" ? S.form : null;
+  const eo = S.editOrder;
+  return `<div class="panel">
+    <div class="row"><button class="link" data-act="back">← Все сделки</button></div>
+    <section class="card">
+      ${eo ? editDealForm(o) : `
+      <div class="deal-head"><b style="font-size:19px">${esc(o.client || "без имени")}</b><span class="code">${esc(o.code)}</span><span class="spacer"></span><button class="link small" data-act="edit-deal">Изменить</button></div>
+      <div class="meta" style="margin:6px 0 12px">
+        ${o.clientCode ? `<span>Код клиента: <b>${esc(o.clientCode)}</b></span>` : ""}
+        ${o.what ? `<span>${esc(o.what)}</span>` : ""}
+        ${S.isOwner ? `<span>Менеджер: <b>${esc(nameOf(uid))}</b></span>` : ""}
+      </div>`}
+      <h3>Этап</h3>
+      <div class="stepper" role="group" aria-label="Этап сделки">${STAGES.map(([sid, label], i) => `<button class="step ${o.status === sid ? "now" : i < idx ? "past" : ""}" data-act="set-stage" data-v="${sid}" aria-pressed="${o.status === sid}">${i + 1}. ${label}</button>`).join("")}</div>
+      ${o.status === "cancelled" ? `<p class="small neg" style="margin:8px 0 0">Сделка отменена.</p>` : ""}
+    </section>
+
+    ${S.msg?.where === "entry" ? `<div class="notice ${S.msg.cls}" role="status">${esc(S.msg.text)}</div>` : ""}
+    <p class="small muted legend"><span class="key done">✓ внесено</span> <span class="key due">! не внесено, а этап уже пройден</span> <span class="key later">○ позже или если было</span></p>
+
+    ${sectionHtml(o, m, f, "goods")}
+    ${sectionHtml(o, m, f, "log")}
+
+    <section class="card">
+      <h2>Итог сделки</h2>
+      <div class="tbl-wrap"><table><tbody>
+        <tr><td>Прибыль на товаре</td><td class="num ${m.g.goods.profit >= 0 ? "pos" : "neg"}">${money(m.g.goods.profit, "CNY", true)}</td></tr>
+        <tr><td>Результат по доставке и логистике</td><td class="num ${m.g.log.profit >= 0 ? "pos" : "neg"}">${money(m.g.log.profit, "CNY", true)}</td></tr>
+        ${m.g.other.expCny ? `<tr><td>Прочие расходы</td><td class="num neg">− ${money(m.g.other.expCny, "CNY", true)}</td></tr>` : ""}
+        <tr class="total"><td>Прибыль сделки${m.debtCny > 1 ? `<div class="small muted" style="font-weight:400">клиент ещё должен ≈ ${money(m.debtCny, "CNY", true)}</div>` : ""}</td><td class="num ${m.profit >= 0 ? "pos" : "neg"}">${money(m.profit, "CNY", true)}<div class="small muted">${approxRub(m.profit)}</div></td></tr>
+      </tbody></table></div>
+      <div class="row" style="margin-top:12px"><button class="abtn" data-act="open-form" data-v="other" aria-pressed="${!!(f && f.mode === "new" && f.action === "other")}">+ Другой расход по сделке</button></div>
+      ${f && ((f.mode === "new" && f.action === "other") || (f.mode === "edit" && formGroup(f) === "other")) ? `<div style="margin-top:12px">${entryForm(f)}</div>` : ""}
+    </section>
+
+    <section class="card">
+      <div class="row" style="margin-bottom:6px"><h2 style="margin:0">История</h2><span class="spacer"></span>
+        <div class="chips">${[["all", "Всё"], ["goods", "Товар"], ["log", "Логистика"]].map(([k, l]) => `<button class="chip-btn" data-act="hist-filter" data-v="${k}" aria-pressed="${(S.histFilter || "all") === k}">${l}</button>`).join("")}</div>
+      </div>
+      ${(() => { const hl = m.list.filter(e => (S.histFilter || "all") === "all" || entryGroup(e) === S.histFilter).sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0)); return hl.length ? `<div class="hist">${hl.map(e => histRow(e, "deal")).join("")}</div>` : `<div class="empty">Пока ничего не внесено.</div>`; })()}
+    </section>
+
+    <section class="card">
+      <div class="row">
+        ${o.status === "cancelled" ? `<button class="btn small ghost" data-act="set-stage" data-v="request">Вернуть в работу</button>` : (S.pending === "cancel-deal" ? `<span class="confirm"><span class="small">Отменить сделку?</span><button class="btn small danger" data-act="set-stage" data-v="cancelled">Да, отменить</button><button class="btn small quiet" data-act="pending-clear">Нет</button></span>` : `<button class="btn small quiet" data-act="pending" data-v="cancel-deal">Отменить сделку</button>`)}
+        <span class="spacer"></span>
+        ${S.isOwner ? (S.pending === "delete-deal" ? `<span class="confirm"><span class="small">Удалить сделку и все её записи?</span><button class="btn small danger" data-act="delete-deal">Удалить</button><button class="btn small quiet" data-act="pending-clear">Нет</button></span>` : `<button class="btn small quiet" data-act="pending" data-v="delete-deal">Удалить сделку</button>`) : ""}
+      </div>
+    </section>
+  </div>`;
+}
+/* К какой части сделки относится запись: товар, логистика или прочее */
+function entryGroup(e) {
+  if (e.kind === "plan") return "goods";
+  if (e.kind === "charge" || e.kind === "income") return PART_GROUP[PART_OF[e.cat] || "goods"];
+  return EXP_GROUP[e.cat] || "other";
+}
+function formGroup(f) { return entryGroup({ kind: f.kind, cat: f.cat }); }
+/* Раздел сделки: итоги сверху, пункты чек-листа с кнопками ниже */
+function sectionHtml(o, m, f, key) {
+  const G = m.g[key];
+  /* Оплата клиента за расходы по Москве появляется, только когда эти расходы выставлены клиенту */
+  const rows = checklist(o, m).filter(r => r.group === key)
+    .filter(r => !(r.id === "payMsk" && !r.ents.length && !Object.keys(m.parts.moscow.charge).length));
+  const MARK = { done: "✓", part: "✓", due: "!", opt: "○", later: "○" };
+  const charge = {}, paid = {};
+  for (const p of G.parts) { for (const [c, v] of Object.entries(m.parts[p].charge)) charge[c] = (charge[c] || 0) + v; for (const [c, v] of Object.entries(m.parts[p].paid)) paid[c] = (paid[c] || 0) + v; }
+  const debts = G.parts.map(p => m.parts[p].debt).filter(d => d && d.amount > (d.cur === "CNY" ? 1 : 0.5));
+  /* Клиент принёс больше счёта — показываем переплату */
+  const over = G.parts.map(p => m.parts[p].debt).filter(d => d && d.amount < -(d.cur === "CNY" ? 1 : 0.5));
+  const debtTxt = debts.length ? debts.map(d => money(d.amount, d.cur, true)).join(" + ") : over.length ? `нет · переплата ${over.map(d => money(-d.amount, d.cur, true)).join(" + ")}` : (Object.keys(charge).length ? "нет" : "—");
+  /* Исправление записи открывается прямо под её пунктом чек-листа; если пункта нет — сверху раздела */
+  const editRow = f && f.mode === "edit" ? rows.find(r => r.ents.some(e => e.id === f.id)) : null;
+  const editHere = f && f.mode === "edit" && formGroup(f) === key && !editRow;
+  /* По счёту: ещё не оплаченная часть суммы поставщика тоже считается расходом */
+  const expect = G.chargeCny - G.expCny - (key === "goods" ? Math.max(0, (m.planCny || 0) - (m.exp["Выкуп товара"]?.cny || 0)) : 0);
+  return `<section class="card sec sec-${key}">
+    <div class="sec-head"><h2>${key === "goods" ? "Товар" : "Доставка и логистика"}</h2><span class="small muted">${key === "goods" ? "оплата клиента за товар и выкуп у поставщика" : "оплата клиента за доставку и все расходы на логистику"}</span></div>
+    <div class="stats">
+      <div class="stat"><span>Счёт клиенту</span><b>${byCur(charge)}</b></div>
+      <div class="stat"><span>Клиент оплатил</span><b>${byCur(paid)}</b></div>
+      <div class="stat"><span>Долг клиента</span><b class="${debts.length ? "neg" : ""}">${debtTxt}</b></div>
+      <div class="stat"><span>${key === "goods" ? "Расходы на товар" : "Расходы на логистику"}</span><b>${G.expCny ? "− " + money(G.expCny, "CNY", true) : "—"}</b></div>
+      <div class="stat"><span>${key === "goods" ? "Заработаем на товаре" : "Заработаем на доставке"} по счёту</span><b class="${expect >= 0 ? "pos" : "neg"}">${G.chargeCny ? money(expect, "CNY", true) : "—"}</b></div>
+      <div class="stat main"><span>Заработали сейчас (оплачено − расходы)</span><b class="${G.profit >= 0 ? "pos" : "neg"}">${money(G.profit, "CNY", true)}</b></div>
+    </div>
+    ${editHere ? `<div style="margin:12px 0">${entryForm(f)}</div>` : ""}
+    <div class="cl">${rows.map(r => {
+      const open = f && f.mode === "new" && (f.action === r.id || (r.id === "msk" && f.action === "chargeMsk"));
+      const editOpen = editRow === r;
+      /* Каждая запись пункта — со своей кнопкой «Изменить» */
+      const KL = { plan: "поставщик", charge: "клиенту", income: "оплата", expense: "расход" };
+      const ents = r.ents.length ? `<div class="cl-ents">${[...r.ents].sort((a, b) => (a.date || "").localeCompare(b.date || "") || (a.createdAt || 0) - (b.createdAt || 0)).map(e => `<div class="cl-ent${f && f.mode === "edit" && f.id === e.id ? " on" : ""}"><span>${fmtDate(e.date)} · ${REFUND_CATS.includes(e.cat) ? "возврат" : KL[e.kind] || ""} <b>${money(e.amount, e.cur)}</b>${e.kind === "income" && e.method ? ` · ${esc(e.method)}` : ""}</span>${canEditEntry(e) ? `<button type="button" class="link small" data-act="edit-entry" data-ctx="deal" data-key="${esc(e.uid + "/" + e.id)}">Изменить</button>` : ""}</div>`).join("")}</div>` : "";
+      /* Расходы по Москве записаны за наш счёт — можно выставить их клиенту позже */
+      const mskBill = r.id === "msk" && r.ents.some(e => e.kind === "expense") && !r.ents.some(e => e.kind === "charge")
+        ? ` · <button type="button" class="link small" data-act="open-form" data-v="chargeMsk">Выставить клиенту</button>` : "";
+      const desc = r.state === "done" || r.state === "part"
+        ? `${r.sum}${r.ents.length > 1 ? ` · ${r.ents.length} записи` : ""}${r.hasReceipt ? " · есть чек" : ""}${r.extra ? ` · <b class="${r.state === "part" ? "warn-t" : r.state === "done" ? "" : "neg"}">${r.extra}</b>` : ""}${mskBill}`
+        : r.state === "due" ? `<b class="warn-t">Не внесено</b>${r.note ? " · " + esc(r.note) : ""}`
+        : r.note ? esc(r.note) : (r.state === "later" ? "на следующих этапах" : "");
+      const si = STAGE_IDX[r.stage];
+      return `<div class="cl-row st-${r.state}">
+        <span class="cl-mark" aria-hidden="true">${MARK[r.state]}</span>
+        <div class="cl-main"><span class="cl-st ${r.current ? "now" : ""}">${si + 1}. ${STAGE_NAME[r.stage]}${r.current ? " · сейчас" : ""}</span><span class="cl-t">${esc(r.label)}</span><span class="cl-d">${desc}</span>${ents}</div>
+        <button class="btn small ${r.state === "due" ? "" : "ghost"}" data-act="open-form" data-v="${r.id}" aria-pressed="${!!open}">${r.ents.length ? (r.sums ? "Изменить" : "+ ещё") : "+ Внести"}</button>
+      </div>${open ? `<div class="cl-form">${r.combo ? comboForm(f, m) : r.sums ? sumsForm(f) : entryForm(f)}</div>` : ""}${editOpen ? `<div class="cl-form">${entryForm(f)}</div>` : ""}`;
+    }).join("")}</div>
+  </section>`;
+}
+/* ---------- окно «Сумма поставщика и сумма клиенту» ---------- */
+function sumsForm(f) {
+  const sup = num(f.sup), cli = num(f.cli), rate = f.cur === "CNY" ? 1 : num(f.rate);
+  const cliCny = cli > 0 && rate > 0 ? toCny(cli, f.cur, rate) : NaN;
+  const markup = sup > 0 && isFinite(cliCny) ? cliCny - sup : NaN;
+  return `<form class="form" data-form="sums" novalidate>
+    <div class="form-head"><b>Сумма поставщика и сумма клиенту</b><span class="spacer"></span><button type="button" class="link" data-act="close-form">Закрыть</button></div>
+    <p class="hint-t" style="margin:0">Окончательное решение по товару: сколько платим поставщику и сколько берём с клиента.</p>
+    <div class="grid">
+      <div class="f"><label for="fs-sup">Сумма поставщика, ¥</label><input id="fs-sup" data-bind="form.sup" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(f.sup)}"><span class="hint-t">без нашего процента</span></div>
+      <div class="f"><label for="fs-cli">Сумма клиенту${f.cur === "CNY" ? ", ¥" : `, ${CUR[f.cur]}`}</label><input id="fs-cli" data-bind="form.cli" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(f.cli)}">
+        <div class="curs">${CUR_ORDER.map(c => `<button type="button" data-act="fs-cur" data-v="${c}" aria-pressed="${f.cur === c}">${CUR[c]}</button>`).join("")}</div><span class="hint-t">с нашей наценкой, готовой суммой</span></div>
+      ${f.cur !== "CNY" ? `<div class="f"><label for="fs-rate">Курс: ${rateUnit(f.cur)}</label><input id="fs-rate" data-bind="form.rate" inputmode="decimal" autocomplete="off" value="${esc(f.rate)}"><span class="hint-t">чтобы посчитать наценку в юанях</span></div>` : ""}
+    </div>
+    <div class="calc-box" id="fs-calc">${sumsCalc(f)}</div>
+    <div class="grid">
+      <div class="f"><label for="fs-date">Дата</label><input id="fs-date" type="date" data-bind="form.date" value="${esc(f.date)}"></div>
+      <div class="f"><label for="fs-note">Комментарий</label><input id="fs-note" data-bind="form.note" autocomplete="off" value="${esc(f.note)}" placeholder="Например: 500 шт, цвет чёрный"></div>
+    </div>
+    <div class="row"><button type="button" class="btn" id="f-save" data-act="save-sums">Сохранить</button><span id="f-msg" role="status" class="${S.msg?.where === "form" ? S.msg.cls : ""}">${S.msg?.where === "form" ? esc(S.msg.text) : ""}</span></div>
+  </form>`;
+}
+function sumsCalc(f) {
+  const sup = num(f.sup), cli = num(f.cli), rate = f.cur === "CNY" ? 1 : num(f.rate);
+  const cliCny = cli > 0 && rate > 0 ? toCny(cli, f.cur, rate) : NaN;
+  if (!(sup > 0) || !isFinite(cliCny)) return "";
+  const mk = cliCny - sup;
+  return `<b class="${mk >= 0 ? "pos" : "neg"}">Наценка: ${money(mk, "CNY", true)}</b>${f.cur !== "CNY" ? ` <span class="muted">(клиенту ≈ ${money(cliCny, "CNY", true)})</span>` : ""} · ${sup > 0 ? `${inNum(mk / sup * 100, 1)}% к сумме поставщика` : ""}`;
+}
+async function saveSums() {
+  const f = S.form;
+  const fail = t => { S.msg = { where: "form", cls: "err", text: t }; render(true); };
+  const sup = num(f.sup), cli = num(f.cli), rate = f.cur === "CNY" ? 1 : num(f.rate);
+  if (!(sup > 0) && !(cli > 0)) return fail("Впишите сумму поставщика и сумму клиенту.");
+  if (cli > 0 && !(rate > 0)) return fail(`Укажите курс ${CUR[f.cur]} — он нужен, чтобы посчитать наценку.`);
+  if (!f.date) return fail("Укажите дату.");
+  const btn = document.getElementById("f-save"); if (btn) btn.disabled = true;
+  const col = S.db.collection(`deals/${f.uid}/entries`);
+  const note = f.note.trim().slice(0, 300);
+  try {
+    if (sup > 0) {
+      const body = { kind: "plan", cat: "Сумма поставщика", amount: r2(sup), cur: "CNY", rate: 1, cny: r2(sup), date: f.date, method: null, note, receipt: null, receiptType: null, updatedAt: Date.now() };
+      if (f.planId) await col.doc(f.planId).update(body); else await col.doc().set({ ...body, orderId: f.orderId, createdBy: S.myId, createdAt: Date.now() });
+    }
+    if (cli > 0) {
+      const body = { kind: "charge", cat: "Товар", amount: r2(cli), cur: f.cur, rate: +rate.toFixed(6), cny: r2(toCny(cli, f.cur, rate)), date: f.date, method: null, note, receipt: null, receiptType: null, updatedAt: Date.now() };
+      if (f.chargeId) await col.doc(f.chargeId).update(body); else await col.doc().set({ ...body, orderId: f.orderId, createdBy: S.myId, createdAt: Date.now() });
+    }
+    S.form = null; S.msg = { where: "entry", cls: "ok", text: `Сохранено: ${[sup > 0 ? `поставщик ${money(sup, "CNY")}` : "", cli > 0 ? `клиенту ${money(cli, f.cur)}` : ""].filter(Boolean).join(", ")}` }; render(true);
+  } catch (err) { fail("Не сохранилось. Проверьте интернет и попробуйте ещё раз."); }
+  finally { const b2 = document.getElementById("f-save"); if (b2) b2.disabled = false; }
+}
+/* ---------- окно «Доставка до Москвы»: перевозчик + счёт клиенту + оплата клиента ---------- */
+function comboRate(f) { return f.cur === "CNY" ? 1 : (num(f.rate) > 0 ? num(f.rate) : curRate(f.cur)); }
+/* Счёт клиенту за доставку с учётом суммы, которую вписывают прямо сейчас */
+function comboInv(f, m) {
+  const charges = m.list.filter(e => e.kind === "charge" && PART_OF[e.cat] === "delivery");
+  const cli = num(f.client);
+  const curs = new Set(charges.map(e => e.cur)); if (cli > 0) curs.add(f.cur);
+  if (curs.size !== 1) return null;
+  const cur = [...curs][0];
+  let total = charges.reduce((s, e) => s + e.amount, 0), totC = charges.reduce((s, e) => s + (e.cny || 0), 0);
+  if (cli > 0) { total += cli; totC += toCny(cli, f.cur, comboRate(f)); }
+  const k = total > 0 ? totC / total : 0;
+  const paid = m.list.filter(e => e.kind === "income" && PART_OF[e.cat] === "delivery").reduce((s, e) => s + appliedOf(e, cur, k), 0);
+  return { part: "delivery", cur, total, k, paid, remaining: total - paid };
+}
+/* Оплата клиента внутри окна — в том же виде, что и обычная форма оплаты */
+function payForm(f, m) {
+  const inv = comboInv(f, m);
+  return { kind: "income", inv, cur: f.payCur, xr: f.payXr, amount: f.payAmount, cat: f.payCat, full: !!(inv && FULL_CATS.includes(f.payCat) && inv.remaining > 0.005) };
+}
+function prefillPay(f, m) {
+  const pf = payForm(f, m); if (!pf.inv) return;
+  f.payTouched = false;
+  if (crossNeeded(pf)) { f.payXr = inNum(defaultXr(pf), 4); pf.xr = f.payXr; }
+  if (pf.full) { const v = fullAmount(pf); f.payAmount = isFinite(v) ? inNum(r2(v), 2) : ""; }
+}
+function linkPay(changed) {
+  const f = S.form, m = dealMoney(f.uid, f.orderId);
+  let pf = payForm(f, m);
+  /* Сумму клиента вписывают сами; остаток — только подсказка, пока сумму не поменяли руками */
+  if (changed === "payAmount") f.payTouched = true;
+  else if (f.payOn && pf.inv && pf.full && !f.payTouched && (changed === "payXr" || changed === "client" || changed === "rate")) {
+    const v = fullAmount(pf); if (isFinite(v)) { f.payAmount = inNum(r2(v), 2); const el = document.getElementById("fp-amount"); if (el) el.value = f.payAmount; }
+  }
+  pf = payForm(f, m);
+  /* счёт клиенту только что вписали — покажем поля оплаты, когда человек выйдет из поля */
+  if (f.payOn && pf.inv && !document.getElementById("fp-amount")) {
+    const el = document.activeElement;
+    if (el && el.id === "fc-client") el.addEventListener("blur", () => { if (S.form === f) { prefillPay(f, dealMoney(f.uid, f.orderId)); render(true); } }, { once: true });
+  }
+  const ap = document.getElementById("fp-applied"); if (ap) ap.textContent = pf.inv ? appliedText(pf) : "";
+  const el = document.getElementById("fc-calc"); if (el) el.innerHTML = comboCalc(f, m);
+}
+function comboForm(f, m) {
+  const car = m.exp["Доставка в Москву"], cliP = m.parts.delivery;
+  const already = [car ? `перевозчик ${byCur(car.by)}` : "", Object.keys(cliP.charge).length ? `счёт клиенту ${byCur(cliP.charge)}` : "", Object.keys(cliP.paid).length ? `оплачено ${byCur(cliP.paid)}` : ""].filter(Boolean).join(", ");
+  const pf = payForm(f, m);
+  const payBlock = !f.payOn ? "" : !pf.inv ? `<p class="hint-t" style="margin:0">Сначала укажите счёт клиенту — от него считается оплата.</p>` : `
+    <div class="chips">${["Доставка · предоплата", "Доставка · доплата", "Доставка · полная оплата"].map(c => `<button type="button" class="chip-btn" data-act="fp-cat" data-v="${esc(c)}" aria-pressed="${f.payCat === c}">${esc(c.replace("Доставка · ", ""))}</button>`).join("")}</div>
+    <div class="f"><span class="lbl">Клиент платит в</span><div class="curs">${CUR_ORDER.map(c => `<button type="button" data-act="fp-cur" data-v="${c}" aria-pressed="${f.payCur === c}">${CUR[c]}</button>`).join("")}</div></div>
+    ${crossNeeded(pf) ? (() => { const pr = crossPair(pf); return `<div class="f"><label for="fp-xr">Курс: 1 ${CUR[pr.big]} = ? ${CUR[pr.small]}</label><input id="fp-xr" data-bind="form.payXr" inputmode="decimal" autocomplete="off" value="${esc(f.payXr)}"><span class="hint-t">Курс, по которому клиент платит ${CUR[pf.cur]} вместо ${CUR[pf.inv.cur]}. Сумму впишите ту, что клиент реально принёс, — можно больше счёта.</span></div>`; })() : ""}
+    <div class="grid">
+      <div class="f"><label for="fp-amount">Сколько принёс клиент, ${CUR[f.payCur]}</label><input id="fp-amount" data-bind="form.payAmount" inputmode="decimal" autocomplete="off" value="${esc(f.payAmount)}"></div>
+      <div class="f"><label for="fp-method">Куда пришли деньги</label><select id="fp-method" data-bind="form.payMethod">${METHODS.income.map(mm => `<option ${f.payMethod === mm ? "selected" : ""}>${esc(mm)}</option>`).join("")}</select></div>
+    </div>
+    <div class="small"><b id="fp-applied">${esc(appliedText(pf))}</b></div>`;
+  return `<form class="form" data-form="combo" novalidate>
+    <div class="form-head"><b>Доставка до Москвы</b><span class="spacer"></span><button type="button" class="link" data-act="close-form">Закрыть</button></div>
+    ${already ? `<p class="hint-t" style="margin:0">Уже внесено: ${already}. Новые суммы добавятся к этому.</p>` : `<p class="hint-t" style="margin:0">Счёт логистов, счёт клиенту и его оплата — в одном окне. Можно заполнить сейчас часть, остальное позже.</p>`}
+
+    <div class="sub-block"><h3>1. Наш расход и счёт клиенту</h3>
+      <div class="f"><span class="lbl">Валюта счетов</span><div class="curs">${["USD", "USDT", "CNY", "RUB"].map(c => `<button type="button" data-act="fc-cur" data-v="${c}" aria-pressed="${f.cur === c}">${CUR[c]}</button>`).join("")}</div></div>
+      <div class="grid">
+        <div class="f"><label for="fc-carrier">Логисты выставили нам, ${CUR[f.cur]}</label><input id="fc-carrier" data-bind="form.carrier" inputmode="decimal" autocomplete="off" placeholder="например 800" value="${esc(f.carrier)}"></div>
+        <div class="f"><label for="fc-client">Выставляем клиенту, ${CUR[f.cur]}</label><input id="fc-client" data-bind="form.client" inputmode="decimal" autocomplete="off" placeholder="например 1000" value="${esc(f.client)}"></div>
+        ${f.cur !== "CNY" && !(curRate(f.cur) > 0) ? `<div class="f"><label for="fc-rate">Курс ${CUR[f.cur]} ещё не задан — укажите один раз, ${rateUnit(f.cur)}</label><input id="fc-rate" data-bind="form.rate" inputmode="decimal" autocomplete="off" value="${esc(f.rate)}"></div>` : ""}
+      </div>
+      <div class="f"><label for="fc-method">Чем платим перевозчику</label><select id="fc-method" data-bind="form.method">${METHODS.expense.map(mm => `<option ${f.method === mm ? "selected" : ""}>${esc(mm)}</option>`).join("")}</select></div>
+    </div>
+
+    <div class="sub-block"><h3>2. Оплата клиента</h3>
+      <label class="check"><input type="checkbox" data-act="fp-on" ${f.payOn ? "checked" : ""}> Клиент оплатил доставку</label>
+      ${payBlock}
+    </div>
+
+    <div class="calc-box" id="fc-calc">${comboCalc(f, m)}</div>
+    <div class="grid">
+      <div class="f"><label for="fc-date">Дата</label><input id="fc-date" type="date" data-bind="form.date" value="${esc(f.date)}"></div>
+      <div class="f"><label for="fc-note">Комментарий</label><input id="fc-note" data-bind="form.note" autocomplete="off" value="${esc(f.note)}" placeholder="Например: логист Ли, контейнер 12"></div>
+    </div>
+    ${S.assets ? `<div class="f"><label for="f-file">Счёт перевозчика (фото или PDF)</label><input id="f-file" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" data-act="f-file"></div>` : ""}
+    <div class="row"><button type="submit" class="btn" id="f-save">Сохранить</button></div>
+    <div id="f-msg" role="status" class="${S.msg?.where === "form" ? S.msg.cls : ""}">${S.msg?.where === "form" ? esc(S.msg.text) : ""}</div>
+  </form>`;
+}
+async function saveCombo() {
+  const f = S.form;
+  const fail = t => { S.msg = { where: "form", cls: "err", text: t }; render(true); };
+  const m = dealMoney(f.uid, f.orderId);
+  const car = num(f.carrier), cli = num(f.client), payA = num(f.payAmount);
+  const doPay = f.payOn && payA > 0;
+  if (!(car > 0) && !(cli > 0) && !doPay) return fail("Впишите хотя бы одну сумму.");
+  const rate = comboRate(f);
+  if ((car > 0 || cli > 0) && !(rate > 0)) return fail(`Укажите курс ${CUR[f.cur]} один раз — он нужен для пересчёта в юани.`);
+  if (!f.date) return fail("Укажите дату.");
+  /* оплата клиента: считаем до записи, по счёту вместе с суммой из этого окна */
+  let payBody = null;
+  if (doPay) {
+    const pf = payForm(f, m);
+    if (!pf.inv) return fail("Сначала укажите счёт клиенту — от него считается оплата.");
+    const cross = crossNeeded(pf);
+    if (cross && !(num(f.payXr) > 0)) return fail("Укажите курс, по которому клиент платит.");
+    const applied = cross ? toApplied(pf, payA) : payA;
+    let pr = 1, pc = payA;
+    if (f.payCur !== "CNY") { pr = curRate(f.payCur); pc = pr > 0 ? toCny(payA, f.payCur, pr) : applied * pf.inv.k; if (!(pr > 0)) pr = rateFrom(payA, f.payCur, pc); }
+    payBody = { kind: "income", cat: f.payCat, amount: r2(payA), cur: f.payCur, rate: +pr.toFixed(6), cny: r2(pc), method: f.payMethod, applied: r2(applied), applyCur: pf.inv.cur, receipt: null, receiptType: null };
+  }
+  const btn = document.getElementById("f-save"); if (btn) btn.disabled = true;
+  try {
+    let receipt = null, receiptType = null;
+    if (f.file && S.assets && car > 0) {
+      try { const up = await S.assets.upload(f.file); receipt = up.id; receiptType = up.contentType; }
+      catch (err) { if (btn) btn.disabled = false; return fail(err?.code === "unsupported_type" ? "Такой формат не поддерживается. Прикрепите JPG, PNG или PDF." : "Файл не загрузился. Попробуйте ещё раз или сохраните без него."); }
+    }
+    const col = S.db.collection(`deals/${f.uid}/entries`);
+    const base = { orderId: f.orderId, date: f.date, note: f.note.trim().slice(0, 300), createdBy: S.myId, createdAt: Date.now(), updatedAt: Date.now() };
+    if (car > 0) await col.doc().set({ ...base, kind: "expense", cat: "Доставка в Москву", amount: r2(car), cur: f.cur, rate: +rate.toFixed(6), cny: r2(toCny(car, f.cur, rate)), method: f.method, receipt, receiptType });
+    if (cli > 0) await col.doc().set({ ...base, kind: "charge", cat: "Доставка до Москвы", amount: r2(cli), cur: f.cur, rate: +rate.toFixed(6), cny: r2(toCny(cli, f.cur, rate)), method: null, receipt: null, receiptType: null });
+    if (payBody) await col.doc().set({ ...base, ...payBody });
+    const parts = [car > 0 ? `перевозчик ${money(car, f.cur)}` : "", cli > 0 ? `клиенту ${money(cli, f.cur)}` : "", payBody ? `оплата ${money(payA, f.payCur)}` : ""].filter(Boolean).join(", ");
+    S.form = null; S.msg = { where: "entry", cls: "ok", text: `Сохранено: доставка до Москвы — ${parts}` }; render(true);
+  } catch (err) { fail("Не сохранилось. Проверьте интернет и попробуйте ещё раз."); }
+  finally { const b2 = document.getElementById("f-save"); if (b2) b2.disabled = false; }
+}
+function editDealForm(o) {
+  const f = S.editOrder;
+  return `<div class="grid" style="margin-bottom:12px">
+    <div class="f"><label for="eo-client">Имя клиента</label><input id="eo-client" data-bind="editOrder.client" value="${esc(f.client)}"></div>
+    <div class="f"><label for="eo-ccode">Код клиента</label><input id="eo-ccode" data-bind="editOrder.clientCode" value="${esc(f.clientCode)}"></div>
+    <div class="f wide"><div class="row"><button class="btn small" data-act="save-edit-deal">Сохранить</button><button class="btn small quiet" data-act="cancel-edit-deal">Отмена</button></div></div>
+  </div>`;
+}
+
+/* ---------- форма записи ---------- */
+function openForm(ctx, kind, cat, extra = {}) {
+  const cur = extra.cur || (kind === "expense" || kind === "general" ? "CNY" : "RUB");
+  S.form = { ctx, mode: "new", kind, cat, cur, amount: "", rate: inNum(curRate(cur)), cny: "", driver: "rate", date: today(), method: kind === "charge" ? "" : (METHODS[kind === "income" ? "income" : "expense"][0]), note: "", receipt: null, file: null, ...extra };
+  S.msg = null;
+}
+function entryForm(f) {
+  /* В оплате по разделу показываем только его варианты: товар отдельно, доставка отдельно */
+  const cats = f.kind === "income" && f.ctx === "deal" && f.action !== "income"
+    ? CATS.income.filter(c => PART_GROUP[PART_OF[c]] === PART_GROUP[PART_OF[f.cat] || "goods"])
+    : f.kind === "expense" && f.ctx === "deal" && f.action !== "other"
+    ? CATS.expense.filter(c => EXP_GROUP[c] === EXP_GROUP[f.cat])
+    : CATS[f.kind];
+  const showMethod = f.kind !== "charge" && f.kind !== "plan";
+  const showReceipt = f.kind !== "charge" && f.kind !== "plan" && S.assets;
+  const methods = METHODS[f.kind === "income" ? "income" : "expense"];
+  return `<form class="form" data-form="entry" novalidate>
+    <div class="form-head"><b>${f.mode === "edit" ? "Изменить запись" : f.kind === "expense" && f.ctx === "deal" ? ({ goods: "Расход на товар", log: "Расход на логистику" }[EXP_GROUP[f.cat]] || KIND_TITLE.expense) : KIND_TITLE[f.kind]}</b><span class="spacer"></span><button type="button" class="link" data-act="close-form">Закрыть</button></div>
+    ${f.kind === "income" ? `<p class="hint-t" style="margin:0">${f.inv ? `Счёт за «${esc(PARTS.find(([p]) => p === f.inv.part)?.[1] || "")}»: <b>${money(f.inv.total, f.inv.cur)}</b>, оплачено ${money(f.inv.paid, f.inv.cur)}, осталось <b>${money(Math.max(0, f.inv.remaining), f.inv.cur)}</b>. Выберите, чем платит клиент.` : "Клиент принёс деньги: депозит, доплата или оплата доставки."}</p>` : f.kind === "charge" ? `<p class="hint-t" style="margin:0">Сколько клиент должен заплатить. Из счёта и оплат считается долг.${f.cat === "Доставка до Москвы" ? " Доставку до Москвы выставляем в долларах." : ""}</p>` : ""}
+    <div class="f"><span class="lbl">За что</span><div class="chips">${cats.map(c => `<button type="button" class="chip-btn" data-act="f-cat" data-v="${esc(c)}" aria-pressed="${f.cat === c}">${esc(c)}</button>`).join("")}</div></div>
+    ${(() => {
+      const amt = `<div class="f"><label for="f-amount">${f.kind === "income" ? `Сколько принёс клиент, ${CUR[f.cur]}` : `Сумма${rubOnly(f) ? `, ${CUR[f.cur]}` : ""}`}</label><input id="f-amount" data-bind="form.amount" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(f.amount)}"></div>`;
+      /* Расходы по Москве — всегда в рублях, валюту не выбираем */
+      if (rubOnly(f)) return `<div class="grid">${amt}</div>`;
+      const curs = `<div class="f"><span class="lbl">${f.kind === "income" && f.inv ? "Клиент платит в" : "Валюта"}</span><div class="curs">${CUR_ORDER.map(c => `<button type="button" data-act="f-cur" data-v="${c}" aria-pressed="${f.cur === c}">${CUR[c]}</button>`).join("")}</div></div>`;
+      /* Оплата в другой валюте: валюта → курс → сумма */
+      if (crossNeeded(f)) return `<div class="grid">${curs}</div>${xrBlock(f)}<div class="grid">${amt}</div>`;
+      return `<div class="grid">${f.kind === "income" && f.inv ? curs + amt : amt + curs}</div>`;
+    })()}
+
+    ${f.kind === "income" && f.inv ? `<div class="small"><b id="f-applied">${esc(appliedText(f))}</b></div>` : ""}
+    ${f.cur !== "CNY" && !crossNeeded(f) && !f.rateOpen && num(f.rate) > 0 ? `<div class="small muted">Пересчёт в юани по курсу ${esc(f.rate)} ${rateUnit(f.cur)} · <button type="button" class="link small" data-act="f-rate-open">Изменить курс</button></div>` : ""}
+    ${f.cur !== "CNY" && !crossNeeded(f) && (f.rateOpen || !(num(f.rate) > 0)) ? `<div class="f">
+      <div class="conv">
+        <div class="f"><label for="f-rate">Курс, ${rateUnit(f.cur)}</label><input id="f-rate" data-bind="form.rate" inputmode="decimal" autocomplete="off" value="${esc(f.rate)}"></div>
+        <span class="eq">или</span>
+        <div class="f"><label for="f-cny">Получилось в юанях</label><input id="f-cny" data-bind="form.cny" inputmode="decimal" autocomplete="off" value="${esc(f.cny)}"></div>
+      </div>
+      <span class="hint-t">Впишите курс или сколько юаней получили, второе посчитается само.</span>
+    </div>` : ""}
+    <div class="grid">
+      <div class="f"><label for="f-date">Дата</label><input id="f-date" type="date" data-bind="form.date" value="${esc(f.date)}"></div>
+      ${showMethod ? `<div class="f"><label for="f-method">${f.kind === "income" ? "Куда пришли деньги" : "Чем оплатили"}</label><select id="f-method" data-bind="form.method">${(f.method && !methods.includes(f.method) ? [...methods, f.method] : methods).map(mm =>`<option ${f.method === mm ? "selected" : ""}>${esc(mm)}</option>`).join("")}</select></div>` : ""}
+    </div>
+    <div class="f"><label for="f-note">Комментарий</label><input id="f-note" data-bind="form.note" autocomplete="off" value="${esc(f.note)}" placeholder="${f.kind === "income" ? "Например: депозит 50%" : "Например: поставщик Ван, 2 коробки"}"></div>
+    ${billBlock(f)}
+    ${showReceipt ? `<div class="f"><label for="f-file">Чек или скриншот оплаты</label>${f.receipt ? `<div class="row"><a class="receipt" href="/_blob/${esc(f.receipt)}" target="_blank" rel="noopener">Прикреплённый чек</a><button type="button" class="link small" data-act="f-drop-receipt">Убрать</button></div>` : ""}<input id="f-file" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" data-act="f-file"><span class="hint-t">${f.ctx === "deal" ? "Чек увидит менеджер сделки." : "JPG, PNG или PDF."}</span></div>` : ""}
+    <div class="row">
+      <button type="submit" class="btn" id="f-save">${f.mode === "edit" ? "Сохранить изменения" : "Сохранить"}</button>
+      <span class="small muted" id="f-calc">${calcText(f)}</span>
+      <span class="spacer"></span>
+      ${f.mode === "edit" ? (S.pending === "del-entry" ? `<span class="confirm"><button type="button" class="btn small danger" data-act="delete-entry">Удалить запись</button><button type="button" class="btn small quiet" data-act="pending-clear">Нет</button></span>` : `<button type="button" class="btn small quiet" data-act="pending" data-v="del-entry">Удалить</button>`) : ""}
+    </div>
+    <div id="f-msg" role="status" class="${S.msg?.where === "form" ? S.msg.cls : ""}">${S.msg?.where === "form" ? esc(S.msg.text) : ""}</div>
+  </form>`;
+}
+function xrBlock(f) {
+  const pr = crossPair(f);
+  return `<div class="f">
+    <label for="f-xr">Курс: 1 ${CUR[pr.big]} = ? ${CUR[pr.small]}</label>
+    <input id="f-xr" data-bind="form.xr" inputmode="decimal" autocomplete="off" value="${esc(f.xr)}">
+    <span class="hint-t">Курс, по которому клиент платит ${CUR[f.cur]} вместо ${CUR[f.inv.cur]}. Сумму впишите ту, что клиент реально принёс, — можно больше счёта.</span>
+  </div>`;
+}
+/* Расходы по Москве ведём только в рублях */
+const MSK = "Расходы по Москве";
+function rubOnly(f) { return ((f.kind === "expense" || f.kind === "charge") && f.cat === MSK && f.cur === "RUB") || (f.kind === "plan" && f.cur === "CNY"); }
+/* Расход на товар (образец и прочее) можно выставить клиенту — в валюте счёта за товар.
+   Расходы по Москве клиент оплачивает не всегда — выбираем «Клиент» или «Мы» */
+const BILLABLE = ["Образец", "Прочее по товару", MSK];
+function canBill(f) { return f.kind === "expense" && f.ctx === "deal" && f.mode === "new" && BILLABLE.includes(f.cat); }
+function billPart(f) { return f.cat === MSK ? "moscow" : "goods"; }
+function fromCny(cny, cur) { if (cur === "CNY") return cny; const r = curRate(cur); if (!(r > 0)) return NaN; return cur === "RUB" ? cny * r : cny / r; }
+function setBill(f) {
+  const inv = invoiceOf(orderEntries(f.uid, f.orderId), billPart(f));
+  f.billCur = inv ? inv.cur : f.cur;
+  const a = num(f.amount); const cny = f.cur === "CNY" ? a : toCny(a, f.cur, num(f.rate));
+  const v = sameMoney(f.billCur, f.cur) ? a : fromCny(cny, f.billCur);
+  f.billAmount = a > 0 && isFinite(v) ? inNum(r2(v), 2) : "";
+  const el = document.getElementById("f-bill"); if (el) el.value = f.billAmount;
+}
+function billBlock(f) {
+  if (!canBill(f)) return "";
+  if (f.cat === MSK) {
+    return `<div class="f"><span class="lbl">Кто оплачивает расходы по Москве</span><div class="chips">
+      <button type="button" class="chip-btn" data-act="f-bill-set" data-v="1" aria-pressed="${f.bill === true}">Клиент</button>
+      <button type="button" class="chip-btn" data-act="f-bill-set" data-v="0" aria-pressed="${f.bill === false}">Мы, за наш счёт</button>
+    </div>${f.bill == null ? `<span class="hint-t">Выберите — без этого запись не сохранится.</span>` : ""}</div>
+    ${f.bill ? `<div class="f"><label for="f-bill">Выставить клиенту, ${CUR[f.billCur]}</label><input id="f-bill" data-bind="form.billAmount" inputmode="decimal" autocomplete="off" value="${esc(f.billAmount)}"><span class="hint-t">Обычно столько же, сколько потратили, — можно поменять. Ниже появится строка «Клиент оплатил расходы по Москве».</span></div>`
+      : f.bill === false ? `<span class="hint-t">Расход уменьшит заработок на доставке, клиенту ничего не выставляем.</span>` : ""}`;
+  }
+  return `<label class="check"><input type="checkbox" data-act="f-bill-on" ${f.bill ? "checked" : ""}> Выставить клиенту — добавить к счёту за товар</label>
+  ${f.bill ? `<div class="f"><label for="f-bill">Сколько выставить клиенту, ${CUR[f.billCur]}</label><input id="f-bill" data-bind="form.billAmount" inputmode="decimal" autocomplete="off" value="${esc(f.billAmount)}"><span class="hint-t">Подставлено по курсу, можно поменять. Клиент оплатит это вместе с товаром.</span></div>` : `<span class="hint-t">Без галочки расход просто уменьшит прибыль на товаре.</span>`}`;
+}
+function calcText(f) {
+  const a = num(f.amount);
+  if (!(a > 0)) return "";
+  if (f.cur === "CNY") return "";
+  if (crossNeeded(f)) { const y = toCny(a, f.cur, curRate(f.cur)); return isFinite(y) ? `≈ ${money(y, "CNY", true)}` : ""; }
+  const y = num(f.cny);
+  return isFinite(y) && y > 0 ? `= ${money(y, "CNY")}` : "";
+}
+function recalc(changed) {
+  const f = S.form; if (!f || f.cur === "CNY") return;
+  const a = num(f.amount);
+  if (changed === "rate") f.driver = "rate";
+  if (changed === "cny") f.driver = "cny";
+  if (f.driver === "rate") {
+    const y = toCny(a, f.cur, num(f.rate)); f.cny = isFinite(y) && a > 0 ? inNum(r2(y), 2) : "";
+    const el = document.getElementById("f-cny"); if (el && changed !== "cny") el.value = f.cny;
+  } else {
+    const r = rateFrom(a, f.cur, num(f.cny)); f.rate = isFinite(r) ? inNum(r, 4) : f.rate;
+    const el = document.getElementById("f-rate"); if (el && changed !== "rate") el.value = f.rate;
+  }
+  const c = document.getElementById("f-calc"); if (c) c.textContent = calcText(f);
+}
+function histRow(e, ctx) {
+  const title = e.kind === "exchange" ? `${WALLET[e.toWallet || legacyTo(e)].where === "cn" && WALLET[e.fromWallet || legacyFrom(e)].where === "ru" ? "Отправка в Китай" : sameMoney(e.fromCur, e.toCur) ? "Перевод" : "Обмен"}` : (KIND_TITLE[e.kind] || "");
+  const detail = e.kind === "exchange"
+    ? `${esc(WALLET[e.fromWallet || legacyFrom(e)].name)}: ${money(e.fromAmount, e.fromCur)} → ${esc(WALLET[e.toWallet || legacyTo(e)].name)}: ${money(e.toAmount, e.toCur)} · ${esc(xInfo(e.fromCur, e.fromAmount, e.toCur, e.toAmount))}${e.note ? " · " + esc(e.note) : ""}`
+    : `${esc(e.cat)}${e.applyCur && !sameMoney(e.cur, e.applyCur) && isFinite(e.applied) ? ` · засчитано ${money(e.applied, e.applyCur)}` : ""}${e.method ? " · " + esc(e.method) : ""}${e.note ? " · " + esc(e.note) : ""}`;
+  const who = e.createdBy ? (S.isOwner ? nameOf(e.createdBy) : (e.createdBy === S.myId ? "Вы" : "Владелец")) : "";
+  const isImg = e.receipt && e.receiptType !== "application/pdf";
+  const amt = e.kind === "exchange" ? "" : `<span class="${e.kind === "income" ? "pos" : e.kind === "charge" ? "" : "neg"}">${e.kind === "income" ? "+" : e.kind === "charge" ? "" : "−"}${money(e.amount, e.cur)}</span>${e.cur !== "CNY" ? `<span class="c">${money(e.cny, "CNY", true)} · ${inNum(e.rate, 4)}</span>` : ""}`;
+  const editable = e.kind === "exchange" ? (S.isOwner || canEditEntry(e)) : canEditEntry(e);
+  const key = `${e.uid || ""}/${e.id}`;
+  return `<div class="hrow">
+    <span class="hdate">${fmtDate(e.date)}</span>
+    <div class="hmain"><span class="t">${title}</span><span class="d">${detail}</span>${who ? `<span class="d">Внёс: ${esc(who)}</span>` : ""}
+      ${e.receipt ? `<a class="receipt" href="/_blob/${esc(e.receipt)}" target="_blank" rel="noopener">${isImg ? `<img class="thumb" src="/_blob/${esc(e.receipt)}" alt="Чек" loading="lazy">` : ""}<span>Открыть чек</span></a>` : ""}
+    </div>
+    <div class="hamt">${amt}${editable ? (e.kind === "exchange"
+      ? (S.pending === "x:" + e.id ? `<span class="confirm"><button class="btn small danger" data-act="delete-exchange" data-path="${esc(e.path || "company/main/exchanges/" + e.id)}">Удалить</button><button class="btn small quiet" data-act="pending-clear">Нет</button></span>` : `<button class="link small" data-act="pending" data-v="x:${esc(e.id)}">Удалить</button>`)
+      : `<button class="link small" data-act="edit-entry" data-ctx="${ctx}" data-key="${esc(key)}">Изменить</button>`) : ""}</div>
+  </div>`;
+}
+/* Перевод или обмен: курс «1 крупная = N мелких» или комиссия, если валюта та же */
+function xInfo(fc, a, tc, b) {
+  if (!(a > 0 && b > 0)) return "";
+  if (sameMoney(fc, tc)) { const fee = a - b; return fee > 0.005 ? `комиссия ${money(fee, fc)}` : "без комиссии"; }
+  const big = RANK(fc) >= RANK(tc) ? fc : tc, small = big === fc ? tc : fc;
+  return `курс 1 ${CUR[big]} = ${inNum(big === fc ? b / a : a / b, 4)} ${CUR[small]}`;
+}
+/* Старые обмены без кошельков: рубли и доллары — из кассы офиса, USDT — с российского кошелька; приход — в Китай */
+function legacyFrom(x) { return x.fromCur === "USDT" ? "cn_usdt" : x.fromCur === "CNY" ? "cn_cny" : "office"; }
+function legacyTo(x) { return x.toCur === "CNY" ? "cn_cny" : x.toCur === "USDT" ? "cn_usdt" : "office"; }
+
+/* ================================================================== */
+/*  Мои итоги (менеджер) и сводка (владелец)                           */
+/* ================================================================== */
+function monthSelect(extraMonths) {
+  const ms = new Set([monthOf(today()), S.month, ...extraMonths.filter(Boolean)]);
+  return `<select data-act="month" aria-label="Месяц">${[...ms].sort().reverse().map(m => `<option value="${m}" ${m === S.month ? "selected" : ""}>${monthName(m)}</option>`).join("")}</select>`;
+}
+/* Процент менеджеру — по сделкам, товар по которым приехал в Москву в этом месяце (этап «Москва» и дальше) */
+function arrivedDate(o) { if (o.moscowDate || o.closedDate) return o.moscowDate || o.closedDate; const t = o.updatedAt || o.createdAt; if (!t) return ""; const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
+function closedIn(uid, month) {
+  return (S.orders.get(uid) || []).filter(o => o.status !== "cancelled" && (STAGE_IDX[o.status] ?? -1) >= STAGE_IDX.moscow && monthOf(arrivedDate(o)) === month).map(o => ({ o: { ...o, uid }, m: dealMoney(uid, o.id) }));
+}
+/* Один общий процент для всех менеджеров (хранится вместе с курсами — менеджеры его видят) */
+function bonusPct(uid) { return S.rates.bonusPct > 0 ? S.rates.bonusPct : S.bonus[uid]; }
+function minePage() {
+  const uid = S.myId;
+  const months = (S.orders.get(uid) || []).map(o => monthOf(arrivedDate(o))).concat((S.entries.get(uid) || []).map(e => monthOf(e.date)));
+  const closed = closedIn(uid, S.month);
+  const profit = closed.reduce((s, x) => s + x.m.profit, 0);
+  const pct = bonusPct(uid);
+  const bonus = pct > 0 ? Math.max(0, profit) * pct / 100 : null;
+  const ent = (S.entries.get(uid) || []).filter(e => monthOf(e.date) === S.month);
+  const inc = ent.filter(e => e.kind === "income").reduce((s, e) => s + (e.cny || 0), 0);
+  const exp = ent.filter(e => e.kind === "expense").reduce((s, e) => s + (e.cny || 0), 0);
+  const open = (S.orders.get(uid) || []).filter(o => o.status !== "done" && o.status !== "cancelled").map(o => ({ o: { ...o, uid }, m: dealMoney(uid, o.id) }));
+  const debtors = (S.orders.get(uid) || []).filter(o => o.status !== "cancelled").map(o => ({ o: { ...o, uid }, m: dealMoney(uid, o.id) })).filter(x => x.m.debtCny > 1);
+  return `<div class="panel">
+    <div class="filters">${monthSelect(months)}<span class="small muted">Процент — по сделкам, товар по которым приехал в Москву в этом месяце.</span></div>
+    <div class="kpis">
+      <div class="kpi"><span class="k">Приехало в Москву</span><span class="v">${closed.length}</span></div>
+      <div class="kpi main"><span class="k">Компания заработала на ваших сделках</span><span class="v ${profit >= 0 ? "pos" : "neg"}">${money(profit, "CNY", true)}</span><span class="x">${approxRub(profit)}</span></div>
+      <div class="kpi"><span class="k">Ваш бонус${pct > 0 ? ` · ${nf.format(pct)}%` : ""}</span><span class="v">${bonus != null ? money(bonus, "CNY", true) : "—"}</span><span class="x">${bonus != null ? approxRub(bonus) : "процент ещё не назначен"}</span></div>
+    </div>
+    <section class="card"><h2>Приехали в Москву в ${esc(monthName(S.month))}</h2>
+      ${closed.length ? dealsTable(closed, false) : `<div class="empty">В этом месяце товар по вашим сделкам в Москву не приезжал.</div>`}
+    </section>
+    <section class="card"><h2>Кто должен</h2>
+      ${debtors.length ? debtorsTable(debtors, false) : `<div class="empty">Долгов по вашим сделкам нет.</div>`}
+    </section>
+    <section class="card"><h2>В работе</h2><p class="sub">Деньги за ${esc(monthName(S.month))}: от клиентов пришло ${money(inc, "CNY", true)}, на расходы ушло ${money(exp, "CNY", true)}.</p>
+      ${open.length ? dealsTable(open, false, true) : `<div class="empty">Сделок в работе нет.</div>`}
+    </section>
+  </div>`;
+}
+function dealsTable(rows, withMgr, withStage) {
+  return `<div class="tbl-wrap"><table><thead><tr><th>Сделка</th><th class="num">Прибыль</th></tr></thead><tbody>
+    ${rows.map(({ o, m }) => `<tr><td><button class="link" data-act="open-deal" data-uid="${esc(o.uid)}" data-id="${esc(o.id)}">${esc(o.client || "без имени")}</button><div class="code">${esc(o.code)}${withStage ? " · " + esc(STAGE_NAME[o.status] || "") : ""}${withMgr ? " · " + esc(nameOf(o.uid)) : ""}</div><div class="small muted">Клиент оплатил ${money(m.paidCny, "CNY", true)} · расходы ${money(m.expCny, "CNY", true)}</div></td><td class="num ${m.profit >= 0 ? "pos" : "neg"}"><b>${money(m.profit, "CNY", true)}</b></td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+function debtorsTable(rows, withMgr) {
+  return `<div class="tbl-wrap"><table><thead><tr><th>Сделка</th><th class="num">≈ ¥</th></tr></thead><tbody>
+    ${rows.sort((a, b) => b.m.debtCny - a.m.debtCny).map(({ o, m }) => `<tr><td><button class="link" data-act="open-deal" data-uid="${esc(o.uid)}" data-id="${esc(o.id)}">${esc(o.client || "без имени")}</button><div class="code">${esc(o.code)} · ${esc(STAGE_NAME[o.status] || "")}${withMgr ? " · " + esc(nameOf(o.uid)) : ""}</div><div class="small neg">${esc(debtText(m) || "—")}</div></td><td class="num neg"><b>${money(m.debtCny, "CNY", true)}</b></td></tr>`).join("")}
+  </tbody></table></div>`;
+}
+/* Остатки по кошелькам: { кошелёк: { валюта: сумма } } — пришло минус ушло за всё время */
+/* Запись в кошельке — в валюте кошелька: доллар в USDT-кошельке считается как USDT,
+   а оплата через Alipay/WeChat в другой валюте — это ушедшие юани (поле cny записи) */
+function inWallet(w, cur, amount, cny) {
+  const W = WALLET[w];
+  if (!W || w === "other" || W.curs.includes(cur)) return [cur, amount];
+  const d = W.curs.find(c => sameMoney(c, cur)); if (d) return [d, amount];
+  if (w === "cn_cny" && isFinite(cny)) return ["CNY", cny];
+  return [cur, amount];
+}
+function entryMove(e, add) {
+  const sign = e.kind === "income" || (e.kind === "expense" && REFUND_CATS.includes(e.cat)) ? 1 : e.kind === "expense" || e.kind === "general" ? -1 : 0; if (!sign) return;
+  const w = walletOf(e.method, e.cur), [c, a] = inWallet(w, e.cur, e.amount, e.cny);
+  add(w, c, sign * a);
+}
+function walletBalances() {
+  const b = {}; const add = (w, cur, v) => { (b[w] = b[w] || {})[cur] = (b[w][cur] || 0) + v; };
+  for (const e of allEntries()) entryMove(e, add);
+  for (const g of S.general) entryMove({ ...g, kind: "general" }, add);
+  for (const x of allMoves()) { add(x.fromWallet || legacyFrom(x), x.fromCur, -x.fromAmount); add(x.toWallet || legacyTo(x), x.toCur, x.toAmount); }
+  return b;
+}
+/* Переводы и обмены: общие (владелец, company/main/exchanges) и по менеджерам (deals/{uid}/transfers) */
+function allTransfers(uid) {
+  const out = [];
+  for (const [u, arr] of S.transfers) if (!uid || u === uid) for (const t of arr) out.push({ ...t, uid: u, holder: u, kind: "exchange", path: `deals/${u}/transfers/${t.id}` });
+  return out;
+}
+function allMoves() { return [...S.exchanges.map(x => ({ ...x, kind: "exchange", path: "company/main/exchanges/" + x.id })), ...allTransfers()]; }
+/* Не отправлено в Китай — по каждому менеджеру: деньги клиентов его сделок в российских кошельках
+   минус расходы из них минус его отправки в Китай. Сделки владельца + общие отправки владельца — одна строка «Ваши сделки». */
+function ruDebtW(uid) {
+  const b = {}; const add = (w, c, v) => { if (WALLET[w]?.where !== "ru") return; (b[w] = b[w] || {})[c] = (b[w][c] || 0) + v; };
+  for (const e of S.entries.get(uid) || []) entryMove(e, add);
+  for (const t of S.transfers.get(uid) || []) { add(t.fromWallet, t.fromCur, -t.fromAmount); add(t.toWallet, t.toCur, t.toAmount); }
+  if (S.isOwner && uid === S.myId) {
+    for (const g of S.general) entryMove({ ...g, kind: "general" }, add);
+    for (const x of S.exchanges) { add(x.fromWallet || legacyFrom(x), x.fromCur, -x.fromAmount); add(x.toWallet || legacyTo(x), x.toCur, x.toAmount); }
+  }
+  return b;
+}
+function ruDebt(uid) { const by = {}; for (const w of Object.values(ruDebtW(uid))) for (const [c, v] of Object.entries(w)) by[c] = (by[c] || 0) + v; return by; }
+const hasMoney = by => Object.values(by || {}).some(v => Math.abs(v) > 0.005);
+function signedCur(by) {
+  const parts = CUR_ORDER.filter(c => by && Math.abs(by[c] || 0) > 0.005).map(c => `<span class="${by[c] < 0 ? "neg" : ""}">${money(by[c], c, true)}</span>`);
+  return parts.length ? parts.join(" · ") : `<span class="muted">0</span>`;
+}
+/* Для крупных цифр: каждая валюта своей строкой */
+function signedLines(by) {
+  const parts = CUR_ORDER.filter(c => by && Math.abs(by[c] || 0) > 0.005).map(c => `<span class="${by[c] < 0 ? "neg" : ""}" style="display:block;white-space:nowrap">${money(by[c], c, true)}</span>`);
+  return parts.length ? parts.join("") : "0";
+}
+function approxCnyOf(by) { let s = 0; for (const [c, v] of Object.entries(by || {})) { const y = toCny(v, c, curRate(c)); if (!isFinite(y)) return NaN; s += y; } return s; }
+/* Три главные цифры: сколько лежит в России, сколько у вас в Китае, сколько вы заплатили за клиентов из своих */
+function moneyKpis() {
+  const bal = walletBalances(), ru = {}, cn = {};
+  for (const w of WALLETS) { const t = w.where === "ru" ? ru : w.where === "cn" ? cn : null; if (t) for (const [c, v] of Object.entries(bal[w.id] || {})) t[c] = (t[c] || 0) + v; }
+  const own = Math.max(0, -(bal.cn_cny?.CNY || 0));
+  const ap = by => { const c = approxCnyOf(by); return hasMoney(by) && isFinite(c) ? `≈ ${money(c, "CNY", true)}` : ""; };
+  return `<div class="kpis" style="margin-bottom:12px">
+    <div class="kpi main"><span class="k">Не отправлено в Китай</span><span class="v" style="font-size:21px">${signedLines(ru)}</span><span class="x">${ap(ru)}</span></div>
+    <div class="kpi"><span class="k">У вас в Китае</span><span class="v" style="font-size:21px">${signedLines(cn)}</span><span class="x">${ap(cn)}</span></div>
+    <div class="kpi"><span class="k">Заплатили за клиентов из своих</span><span class="v ${own > 0.5 ? "neg" : ""}" style="font-size:21px">${money(own, "CNY", true)}</span><span class="x">${own > 0.5 ? approxRub(own) : "не доплачивали"}</span></div>
+  </div>`;
+}
+/* Таблица «Где деньги»: Россия и Китай по кошелькам. На вкладке «Касса» — кнопки перевода */
+function walletsTable(actions) {
+  const bal = walletBalances();
+  const groups = [["ru", "Россия · ещё не отправлено в Китай"], ["cn", "Китай · у вас"], ["other", "Без кошелька"]];
+  return `<div class="tbl-wrap"><table><tbody>${groups.map(([g, label]) => {
+    const ws = WALLETS.filter(w => w.where === g && (g !== "other" || hasMoney(bal[w.id])));
+    if (!ws.length) return "";
+    const tot = {}; for (const w of ws) for (const [c, v] of Object.entries(bal[w.id] || {})) tot[c] = (tot[c] || 0) + v;
+    const totC = approxCnyOf(tot);
+    return `<tr class="grp"><td>${label}</td><td class="num">${hasMoney(tot) && isFinite(totC) ? `≈ ${money(totC, "CNY", true)}` : ""}</td></tr>` + ws.map(w => {
+      const by = bal[w.id] || {};
+      const pos = Object.values(by).some(v => v > 0.005);
+      const act = !actions || !pos ? "" : w.where === "ru" ? `<button class="btn small ghost" data-act="x-send" data-v="${w.id}">В Китай →</button>`
+        : w.id === "cn_usdt" ? `<button class="btn small ghost" data-act="x-send" data-v="${w.id}">В юани →</button>` : "";
+      return `<tr><td>${esc(w.name)}${w.hint ? `<div class="small muted">${esc(w.hint)}</div>` : ""}</td><td class="num"><b>${signedCur(by)}</b>${act ? `<div style="margin-top:6px">${act}</div>` : ""}</td></tr>`;
+    }).join("");
+  }).join("")}${(() => {
+    /* По менеджерам: сколько денег их клиентов ещё лежит в России */
+    const rows = S.dealUids.map(uid => ({ uid, by: ruDebt(uid) })).filter(r => hasMoney(r.by) || r.uid !== S.myId);
+    if (!rows.length) return "";
+    return `<tr class="grp"><td>Не отправлено в Китай · по менеджерам</td><td></td></tr>` + rows.map(r => {
+      const c = approxCnyOf(r.by);
+      return `<tr><td>${r.uid === S.myId ? "Ваши сделки" : esc(nameOf(r.uid))}${hasMoney(r.by) && isFinite(c) ? `<div class="small muted">≈ ${money(c, "CNY", true)}</div>` : ""}</td><td class="num"><b>${hasMoney(r.by) ? signedCur(r.by) : `<span class="pos">всё отправлено</span>`}</b></td></tr>`;
+    }).join("");
+  })()}</tbody></table></div>
+  ${(bal.cn_cny?.CNY || 0) < -0.5 ? `<p class="small muted" style="margin:8px 0 0">Минус в юанях: столько вы доплатили из личных, пока деньги из России не дошли.</p>` : ""}`;
+}
+/* Товар и доставка отдельно, по движению денег за месяц */
+function splitCard(inM) {
+  const sum = (kind, grp) => inM.filter(e => e.kind === kind && (kind === "income" ? PART_GROUP[PART_OF[e.cat] || "goods"] : EXP_GROUP[e.cat] || "other") === grp).reduce((s, e) => s + (e.cny || 0), 0);
+  const rows = [["goods", "Товар", "выкуп у поставщиков"], ["log", "Доставка и логистика", "логистика по Китаю, упаковка, доставка в Москву, Москва"]].map(([k, label, what]) => {
+    const i = sum("income", k), o = sum("expense", k);
+    return `<tr><td><b>${label}</b><div class="small muted">от клиентов ${money(i, "CNY", true)} · расходы ${money(o, "CNY", true)}</div><div class="small muted">${what}</div></td><td class="num ${i - o >= 0 ? "pos" : "neg"}"><b>${money(i - o, "CNY", true)}</b></td></tr>`;
+  }).join("");
+  const other = sum("expense", "other");
+  return `<section class="card"><h2>Товар и доставка отдельно</h2><p class="sub">Сколько клиенты заплатили за каждую часть и сколько на неё ушло за месяц.</p>
+    <div class="tbl-wrap"><table><tbody>${rows}
+    ${other ? `<tr><td>Прочие расходы по сделкам</td><td class="num neg">− ${money(other, "CNY", true)}</td></tr>` : ""}</tbody></table></div></section>`;
+}
+function summaryPage() {
+  const ents = allEntries();
+  const months = ents.map(e => monthOf(e.date)).concat(S.general.map(g => monthOf(g.date)));
+  const inM = ents.filter(e => monthOf(e.date) === S.month);
+  const genM = S.general.filter(g => monthOf(g.date) === S.month);
+  const income = inM.filter(e => e.kind === "income").reduce((s, e) => s + (e.cny || 0), 0);
+  const dealExp = inM.filter(e => e.kind === "expense").reduce((s, e) => s + (e.cny || 0), 0);
+  const genExp = genM.reduce((s, g) => s + (g.cny || 0), 0);
+  const profit = income - dealExp - genExp;
+  const mgrRows = S.dealUids.map(uid => {
+    const closed = closedIn(uid, S.month);
+    const p = closed.reduce((s, x) => s + x.m.profit, 0);
+    const pct = bonusPct(uid);
+    return { uid, n: closed.length, p, pct, bonus: pct > 0 ? Math.max(0, p) * pct / 100 : null };
+  }).filter(r => r.n || r.uid !== S.myId);
+  const debtors = allOrders().filter(o => o.status !== "cancelled").map(o => ({ o, m: dealMoney(o.uid, o.id) })).filter(x => x.m.debtCny > 1);
+  const cats = {};
+  for (const e of inM) if (e.kind === "expense") cats[e.cat] = (cats[e.cat] || 0) + (e.cny || 0);
+  for (const g of genM) cats[g.cat] = (cats[g.cat] || 0) + (g.cny || 0);
+  const catRows = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+  const maxCat = Math.max(1, ...catRows.map(r => r[1]));
+  const latest = [...ents, ...S.general.map(g => ({ ...g, kind: "general" })), ...allMoves()]
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 12);
+  const ordersById = Object.fromEntries(allOrders().map(o => [o.uid + "/" + o.id, o]));
+  return `<div class="panel">
+    <div class="filters">${monthSelect(months)}<span class="small muted">Всё в юанях по курсу из каждой записи.</span></div>
+    ${!(S.rates.rubPerCny > 0) ? `<div class="notice">Курс рубля появится после первого обмена во вкладке «Касса» или в «Настройках». Тогда итоги будут видны ещё и в рублях.</div>` : ""}
+    <div class="kpis">
+      <div class="kpi"><span class="k">Пришло от клиентов</span><span class="v">${money(income, "CNY", true)}</span><span class="x">${approxRub(income)}</span></div>
+      <div class="kpi"><span class="k">Расходы по сделкам</span><span class="v">${money(dealExp, "CNY", true)}</span><span class="x">${approxRub(dealExp)}</span></div>
+      <div class="kpi"><span class="k">Общие расходы</span><span class="v">${money(genExp, "CNY", true)}</span><span class="x">${approxRub(genExp)}</span></div>
+      <div class="kpi main"><span class="k">Прибыль компании</span><span class="v ${profit >= 0 ? "pos" : "neg"}">${money(profit, "CNY", true)}</span><span class="x">${approxRub(profit)}</span></div>
+    </div>
+
+    ${splitCard(inM)}
+
+    <section class="card"><h2>Менеджеры</h2><p class="sub">Прибыль по сделкам, товар по которым приехал в Москву в этом месяце, и процент из «Настроек».</p>
+      ${mgrRows.length ? `<div class="tbl-wrap"><table><thead><tr><th>Менеджер</th><th class="num">Бонус</th></tr></thead><tbody>
+        ${mgrRows.map(r => `<tr><td><b>${esc(nameOf(r.uid))}</b><div class="small muted">приехало в Москву: ${r.n} · прибыль <span class="${r.p >= 0 ? "pos" : "neg"}">${money(r.p, "CNY", true)}</span> · ${r.pct > 0 ? nf.format(r.pct) + "%" : "процент не задан"}</div></td><td class="num"><b>${r.bonus != null ? money(r.bonus, "CNY", true) : "—"}</b></td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty">Менеджеры появятся после первого входа в учёт.</div>`}
+    </section>
+
+    <section class="card"><h2>Кто должен</h2>
+      ${debtors.length ? debtorsTable(debtors, true) : `<div class="empty">Долгов нет. Долг появляется, когда в сделке есть «Счёт клиенту», а оплат меньше.</div>`}
+    </section>
+
+    <div class="money-grid">
+      <section class="card"><h2>Где деньги</h2><p class="sub">По кошелькам, пришло минус ушло за всё время. Отправка в Китай — во вкладке «Касса».</p>
+        ${moneyKpis()}
+        ${walletsTable(false)}
+      </section>
+      <section class="card"><h2>Куда ушли деньги</h2><p class="sub">Расходы за месяц по статьям.</p>
+        ${catRows.length ? `<div class="tbl-wrap"><table><tbody>${catRows.map(([c, v]) => `<tr><td><div style="display:grid;gap:4px;min-width:130px"><span>${esc(c)}</span><div class="bar" style="width:${Math.max(2, v / maxCat * 100)}%"></div></div></td><td class="num">${money(v, "CNY", true)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">Расходов за месяц нет.</div>`}
+      </section>
+    </div>
+
+    <section class="card"><h2>Последние записи</h2>
+      ${latest.length ? `<div class="hist">${latest.map(e => {
+        const o = e.orderId ? ordersById[e.uid + "/" + e.orderId] : null;
+        return histRow({ ...e, note: [o ? `${o.client} (${o.code})` : "", e.note].filter(Boolean).join(" · ") }, e.kind === "general" ? "general" : "deal");
+      }).join("")}</div>` : `<div class="empty">Записей пока нет.</div>`}
+    </section>
+  </div>`;
+}
+
+/* ================================================================== */
+/*  Касса (владелец)                                                   */
+/* ================================================================== */
+/* Готовые маршруты: из магазина, с физ. карты или со счёта компании — USDT владельцу; у владельца USDT → юани */
+const X_PRESETS = {
+  send: { label: "Магазин → USDT вам", fromWallet: "office", fromCur: "RUB", toWallet: "cn_usdt", toCur: "USDT" },
+  card: { label: "Физ. карта → USDT вам", fromWallet: "card", fromCur: "RUB", toWallet: "cn_usdt", toCur: "USDT" },
+  company: { label: "Счёт компании → USDT вам", fromWallet: "company", fromCur: "RUB", toWallet: "cn_usdt", toCur: "USDT" },
+  cny: { label: "USDT → юани", fromWallet: "cn_usdt", fromCur: "USDT", toWallet: "cn_cny", toCur: "CNY", ownerOnly: true }
+};
+function newXform(p = "send") {
+  const P = X_PRESETS[p];
+  const x = { fromWallet: P.fromWallet, fromCur: P.fromCur, toWallet: P.toWallet, toCur: P.toCur, fromAmount: "", toAmount: "", toTouched: false, holder: S.myId, date: today(), note: "" };
+  return x;
+}
+/* Отправку записываем тому, кто её внёс: менеджер — в свои записи, владелец — в общую кассу */
+function defaultHolder() { return S.myId; }
+function xRecalcHolder(x) { x.holder = S.myId; }
+/* Перевод в той же валюте: «получили» = «отправили», пока не поменяли вручную (комиссия) */
+function xMirror(x) { if (sameMoney(x.fromCur, x.toCur) && !x.toTouched) { x.toAmount = x.fromAmount; const el = document.getElementById("x-to"); if (el) el.value = x.toAmount; } }
+function xOpen(x) {
+  xMirror(x); S.xform = x; S.msg = null; render(true);
+  setTimeout(() => { document.getElementById("x-card")?.scrollIntoView({ block: "start", behavior: "smooth" }); document.getElementById(sameMoney(x.fromCur, x.toCur) ? "x-from" : "x-to")?.focus({ preventScroll: true }); }, 30);
+}
+/* Менеджер переводит только из российских кошельков */
+function xWallets(side) { return S.isOwner ? WALLETS : WALLETS.filter(w => w.where === (side === "from" ? "ru" : "cn")); }
+function xSide(x, side) {
+  const wid = x[side + "Wallet"], cur = x[side + "Cur"], w = WALLET[wid];
+  return `<div class="f"><label for="x-${side}w">${side === "from" ? "Откуда" : "Куда"}</label>
+    <select id="x-${side}w" data-act="x-wallet" data-side="${side}">${xWallets(side).map(o => `<option value="${o.id}" ${o.id === wid ? "selected" : ""}>${esc(o.name)}</option>`).join("")}</select></div>
+    <div class="f"><label for="x-${side === "from" ? "from" : "to"}">${side === "from" ? "Отправили" : "Получили"}${w.curs.length === 1 ? `, ${CUR[cur]}` : ""}</label>
+    <input id="x-${side === "from" ? "from" : "to"}" data-bind="xform.${side}Amount" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(x[side + "Amount"])}">
+    ${w.curs.length > 1 ? `<div class="curs">${w.curs.map(c => `<button type="button" data-act="x-cur" data-side="${side}" data-v="${c}" aria-pressed="${cur === c}">${CUR[c]}</button>`).join("")}</div>` : ""}</div>`;
+}
+/* Форма перевода — одна и для владельца, и для менеджера */
+function xFormCard(x) {
+  const info = xInfo(x.fromCur, num(x.fromAmount), x.toCur, num(x.toAmount));
+  const presets = Object.entries(X_PRESETS).filter(([, P]) => S.isOwner || !P.ownerOnly);
+  return `<section class="card" id="x-card">
+      <h2>${S.isOwner ? "Отправка в Китай и обмен" : "Отправка в Китай"}</h2>
+      <p class="sub">${S.isOwner ? "Откуда ушли деньги и куда пришли. Валюта разная — курс посчитается сам и станет текущим для новых записей. Валюта та же — разница считается комиссией." : "Сколько рублей взяли из магазина, с физ. карты или со счёта и сколько USDT пришло в Китай. Курс посчитается сам, долг уменьшится."}</p>
+      <div class="chips" style="margin-bottom:12px">${presets.map(([k, P]) => `<button type="button" class="chip-btn" data-act="x-preset" data-v="${k}" aria-pressed="${x.fromWallet === P.fromWallet && x.toWallet === P.toWallet}">${esc(P.label)}</button>`).join("")}</div>
+      <div class="xgrid">
+        <div class="xside">${xSide(x, "from")}</div>
+        <div class="xside">${xSide(x, "to")}</div>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <div class="f"><label for="x-date">Дата</label><input id="x-date" type="date" data-bind="xform.date" value="${esc(x.date)}"></div>
+        <div class="f"><label for="x-note">Комментарий</label><input id="x-note" data-bind="xform.note" autocomplete="off" value="${esc(x.note)}" placeholder="Например: купили USDT у обменника"></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn" data-act="save-exchange">Сохранить</button><span class="small" id="x-rate">${esc(info ? info[0].toUpperCase() + info.slice(1) : "")}</span><span id="x-msg" role="status" class="${S.msg?.where === "x" ? S.msg.cls : ""}">${S.msg?.where === "x" ? esc(S.msg.text) : ""}</span></div>
+    </section>`;
+}
+const byNewest = (a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0);
+function cashPage() {
+  const x = S.xform || (S.xform = newXform());
+  const f = S.form && S.form.ctx === "general" ? S.form : null;
+  const hist = [...S.general.map(g => ({ ...g, kind: "general" })), ...allMoves()].sort(byNewest).slice(0, 40);
+  return `<div class="panel">
+    <section class="card"><h2>Где деньги</h2>
+      <p class="sub">Оплата клиента попадает в кошелёк по полю «Куда пришли деньги», расход списывается по «Чем оплатили». Менеджеры вносят отправку в Китай у себя во вкладке «Касса».</p>
+      ${moneyKpis()}
+      ${walletsTable(true)}
+    </section>
+
+    ${xFormCard(x)}
+
+    <section class="card">
+      <h2>Общие расходы</h2>
+      <p class="sub">Зарплаты и бонусы, аренда, офис, реклама. Менеджеры их не видят.</p>
+      ${f ? entryForm(f) : `<button class="btn ghost" data-act="open-general">+ Внести общий расход</button>`}
+      ${S.msg?.where === "entry" ? `<div class="${S.msg.cls}" role="status" style="margin-top:8px">${esc(S.msg.text)}</div>` : ""}
+    </section>
+
+    <section class="card"><h2>История кассы</h2>
+      ${hist.length ? `<div class="hist">${hist.map(e => histRow(e, "general")).join("")}</div>` : `<div class="empty">Обменов и общих расходов пока нет.</div>`}
+    </section>
+  </div>`;
+}
+/* Касса менеджера: его долг перед Trust Way и переводы в Китай */
+function mgrCashPage() {
+  const x = S.xform || (S.xform = newXform());
+  const hist = allTransfers(S.myId).sort(byNewest);
+  const bw = ruDebtW(S.myId), by = ruDebt(S.myId), c = approxCnyOf(by);
+  const ws = WALLETS.filter(w => hasMoney(bw[w.id]));
+  return `<div class="panel">
+    <section class="card"><h2>Не отправлено в Китай</h2>
+      <p class="sub">Деньги ваших клиентов, которые пришли в России (магазин, физ. карта, счёт компании) и ещё не отправлены в Китай.</p>
+      <div class="kpis"><div class="kpi main"><span class="k">Нужно отправить</span><span class="v" style="font-size:21px">${hasMoney(by) ? signedLines(by) : `<span class="pos">0 — всё отправлено</span>`}</span><span class="x">${hasMoney(by) && isFinite(c) ? "≈ " + money(c, "CNY", true) : ""}</span></div></div>
+      ${ws.length ? `<div class="tbl-wrap" style="margin-top:10px"><table><tbody>${ws.map(w => `<tr><td>${esc(w.name)}</td><td class="num"><b>${signedCur(bw[w.id])}</b></td></tr>`).join("")}</tbody></table></div>` : ""}
+    </section>
+    ${xFormCard(x)}
+
+    <section class="card"><h2>Мои переводы</h2>
+      ${hist.length ? `<div class="hist">${hist.map(e => histRow(e, "general")).join("")}</div>` : `<div class="empty">Переводов пока нет.</div>`}
+    </section>
+  </div>`;
+}
+
+/* ================================================================== */
+/*  Настройки (владелец)                                               */
+/* ================================================================== */
+function settingsPage() {
+  const r = S.rates;
+  const mgrs = S.dealUids.filter(u => u !== S.myId);
+  return `<div class="panel">
+    <section class="card">
+      <h2>Текущие курсы</h2>
+      <p class="sub">Подставляются в новые записи. Обновляются сами после каждого обмена в «Кассе». Старые записи от смены курса не меняются.${r.updatedAt ? ` Обновлено ${new Date(r.updatedAt).toLocaleDateString("ru-RU")}.` : ""}</p>
+      <div class="grid">
+        <div class="f"><label for="r-rubusdt">1 USDT = ? ₽</label><input id="r-rubusdt" data-act="r-calc" inputmode="decimal" value="${esc(inNum(r.rubPerCny > 0 && r.cnyPerUsdt > 0 ? r.rubPerCny * r.cnyPerUsdt : NaN, 2))}" placeholder="например 87"><span class="hint-t">по скольку покупаете USDT за рубли</span></div>
+        <div class="f"><label for="r-usdt">1 USDT = ? ¥</label><input id="r-usdt" data-act="r-calc" inputmode="decimal" value="${esc(inNum(r.cnyPerUsdt))}" placeholder="например 7,1"><span class="hint-t">по скольку меняете USDT на юани</span></div>
+        <div class="f"><label for="r-usd">1 $ = ? ¥</label><input id="r-usd" inputmode="decimal" value="${esc(inNum(r.cnyPerUsd))}" placeholder="например 7,1"></div>
+      </div>
+      <p class="small" id="r-rub-calc" style="margin:10px 0 0">${rubCalcText(r.rubPerCny)}</p>
+      <div class="row" style="margin-top:12px"><button class="btn" data-act="save-rates">Сохранить курсы</button><span role="status" class="${S.msg?.where === "rates" ? S.msg.cls : ""}">${S.msg?.where === "rates" ? esc(S.msg.text) : ""}</span></div>
+    </section>
+    <section class="card">
+      <h2>Процент менеджерам</h2>
+      <p class="sub">Один процент для всех менеджеров — от прибыли сделки (товар и доставка вместе). Начисляется, когда товар приехал в Москву; считается в конце месяца. Менеджер видит только свой процент и сумму.</p>
+      <div class="row"><input id="pct-all" inputmode="decimal" value="${esc(inNum(r.bonusPct, 2))}" placeholder="%" aria-label="Процент менеджерам" style="width:120px;text-align:right"><span>%</span><button class="btn small" data-act="save-pct">Сохранить</button></div>
+      <span role="status" class="${S.msg?.where === "pct" ? S.msg.cls : ""}">${S.msg?.where === "pct" ? esc(S.msg.text) : ""}</span>
+    </section>
+    <section class="card">
+      <h2>Как дать доступ менеджерам</h2>
+      <p class="sub">Откройте меню «Поделиться» у этой страницы и пригласите менеджера с правом вносить изменения. Ему нужен свой аккаунт Claude.</p>
+      <p class="sub" style="margin:0">Менеджер видит только свои сделки: счёт, оплаты, расходы, чеки и прибыль по ним, свой процент и бонус. Общие расходы, кассу, чужие сделки и прибыль компании видите только вы. Свои записи менеджер может исправить в течение ${EDIT_DAYS} дней.</p>
+    </section>
+  </div>`;
+}
+
+/* ================================================================== */
+/*  События                                                            */
+/* ================================================================== */
+function bindEvents() {
+  document.getElementById("tabs").addEventListener("click", e => {
+    const b = e.target.closest("[data-tab]"); if (!b) return;
+    S.tab = b.dataset.tab; S.open = null; S.form = null; S.pending = null; S.msg = null; S.editOrder = null;
+    buildTabs(); render(true); window.scrollTo(0, 0);
+  });
+  const main = document.getElementById("main");
+  main.addEventListener("input", e => {
+    const t = e.target;
+    if (t.id === "q") { S.list.q = t.value; document.getElementById("deal-list").innerHTML = dealCards(); return; }
+    if (t.dataset.act === "r-calc") { const a = num(document.getElementById("r-rubusdt").value), u = num(document.getElementById("r-usdt").value); const el = document.getElementById("r-rub-calc"); if (el) el.innerHTML = rubCalcText(a > 0 && u > 0 ? a / u : NaN); return; }
+    const bind = t.dataset.bind; if (!bind) return;
+    const [obj, key] = bind.split(".");
+    if (!S[obj]) return;
+    S[obj][key] = t.value;
+    if (obj === "form" && S.form.kind === "combo") { linkPay(key); return; }
+    if (obj === "form" && S.form.kind === "sums") { const c = document.getElementById("fs-calc"); if (c) c.innerHTML = sumsCalc(S.form); return; }
+    if (obj === "form" && (key === "amount" || key === "rate" || key === "cny")) recalc(key === "amount" ? null : key);
+    if (obj === "form" && key === "billAmount") S.form.billTouched = true;
+    if (obj === "form" && (key === "amount" || key === "rate" || key === "cny") && S.form.bill && !S.form.billTouched) setBill(S.form);
+    if (obj === "form" && (key === "amount" || key === "xr")) { linkFull(key); updateApplied(); const c = document.getElementById("f-calc"); if (c) c.textContent = calcText(S.form); }
+    if (obj === "xform") {
+      const x = S.xform;
+      if (key === "toAmount") x.toTouched = true;
+      if (key === "fromAmount") xMirror(x);
+      const el = document.getElementById("x-rate"), info = xInfo(x.fromCur, num(x.fromAmount), x.toCur, num(x.toAmount));
+      if (el) el.textContent = info ? info[0].toUpperCase() + info.slice(1) : "";
+    }
+  });
+  main.addEventListener("change", e => {
+    const t = e.target;
+    if (t.dataset.act === "list-filter") { S.list.filter = t.value; render(true); return; }
+    if (t.dataset.act === "list-mgr") { S.list.mgr = t.value; render(true); return; }
+    if (t.dataset.act === "x-wallet") {
+      const x = S.xform, side = t.dataset.side, w = WALLET[t.value];
+      x[side + "Wallet"] = t.value;
+      if (!w.curs.includes(x[side + "Cur"])) x[side + "Cur"] = w.curs[0];
+      xMirror(x); xRecalcHolder(x); render(true); return;
+    }
+    if (t.dataset.act === "month") { S.month = t.value; render(true); return; }
+    if (t.dataset.act === "f-file") { S.form.file = t.files?.[0] || null; return; }
+    const bind = t.dataset.bind;
+    if (bind && t.tagName === "SELECT") { const [obj, key] = bind.split("."); if (S[obj]) S[obj][key] = t.value; }
+  });
+  main.addEventListener("submit", e => { e.preventDefault(); if (e.target.dataset.form === "entry") saveEntry(); else if (e.target.dataset.form === "combo") saveCombo(); });
+  main.addEventListener("click", e => {
+    const b = e.target.closest("[data-act]"); if (!b || b.tagName === "SELECT" || b.type === "file") return;
+    const act = b.dataset.act, v = b.dataset.v;
+    const h = HANDLERS[act]; if (h) { e.preventDefault(); h(b, v); }
+  });
+}
+const HANDLERS = {
+  "new-deal": () => { S.oform = { client: "", clientCode: "", mgr: S.isOwner ? (S.dealUids.find(u => u !== S.myId) || S.myId) : S.myId }; S.msg = null; render(true); },
+  "cancel-deal-form": () => { S.oform = null; render(true); },
+  "oform-delivery": (b, v) => { S.oform.delivery = v; render(true); },
+  "save-deal": saveDeal,
+  "open-deal": b => { S.tab = "deals"; S.open = { uid: b.dataset.uid, id: b.dataset.id }; S.form = null; S.pending = null; S.msg = null; S.editOrder = null; buildTabs(); render(true); window.scrollTo(0, 0); },
+  "back": () => { S.open = null; S.form = null; S.pending = null; S.msg = null; S.editOrder = null; render(true); window.scrollTo(0, 0); },
+  "set-stage": (b, v) => setStage(v),
+  "pending": (b, v) => { S.pending = v; render(true); },
+  "pending-clear": () => { S.pending = null; render(true); },
+  "hist-filter": (b, v) => { S.histFilter = v; render(true); },
+  "f-bill-on": () => { const f = S.form; f.bill = !f.bill; if (f.bill) { f.billTouched = false; setBill(f); } render(true); },
+  "f-bill-set": (b, v) => { const f = S.form; f.bill = v === "1"; if (f.bill) { f.billTouched = false; setBill(f); } render(true); if (f.bill) setTimeout(() => { if (!num(f.billAmount)) document.getElementById("f-amount")?.focus(); }, 30); },
+  "fc-cur": (b, v) => { const f = S.form; f.cur = v; f.rate = inNum(curRate(v)); if (f.payOn) { f.payCur = v; prefillPay(f, dealMoney(f.uid, f.orderId)); } render(true); },
+  "fp-on": () => { const f = S.form; f.payOn = !f.payOn; if (f.payOn) { const m = dealMoney(f.uid, f.orderId); const inv = comboInv(f, m); if (inv) f.payCur = inv.cur; prefillPay(f, m); } render(true); },
+  "fp-cat": (b, v) => { const f = S.form; f.payCat = v; const m = dealMoney(f.uid, f.orderId); if (FULL_CATS.includes(v)) prefillPay(f, m); else { f.payAmount = ""; const pf = payForm(f, m); if (pf.inv && crossNeeded(pf) && !(num(f.payXr) > 0)) f.payXr = inNum(defaultXr(pf), 4); } render(true); },
+  "fp-cur": (b, v) => {
+    const f = S.form; f.payCur = v; f.payXr = "";
+    const auto = { USDT: "USDT на кошелёк · Россия", CNY: "Юани (Alipay / WeChat)" };
+    if (["Наличные · офис TW", ...Object.values(auto)].includes(f.payMethod)) f.payMethod = auto[v] || "Наличные · офис TW";
+    const m = dealMoney(f.uid, f.orderId); prefillPay(f, m);
+    const pf = payForm(f, m); if (pf.inv && crossNeeded(pf) && !(num(f.payXr) > 0)) f.payXr = inNum(defaultXr(pf), 4);
+    render(true);
+  },
+  "f-rate-open": () => { S.form.rateOpen = true; render(true); setTimeout(() => document.getElementById("f-rate")?.focus(), 30); },
+  "edit-deal": () => { const o = findOrder(S.open.uid, S.open.id); S.editOrder = { client: o.client || "", clientCode: o.clientCode || "" }; render(true); },
+  "eo-delivery": (b, v) => { S.editOrder.delivery = v; render(true); },
+  "cancel-edit-deal": () => { S.editOrder = null; render(true); },
+  "save-edit-deal": saveEditDeal,
+  "delete-deal": deleteDeal,
+  "open-form": (b, v) => {
+    const a = CHECKLIST.find(x => x.id === v) || EXTRA.find(x => x.id === v); const o = findOrder(S.open.uid, S.open.id);
+    if (!a || !o) return;
+    if (a.sums) {
+      /* Одна сумма поставщика и одна сумма клиенту: если уже внесены — открываем их для исправления */
+      const list = orderEntries(S.open.uid, S.open.id);
+      const plan = list.filter(e => e.kind === "plan"), ch = list.filter(e => e.kind === "charge" && e.cat === "Товар");
+      const p1 = plan.length === 1 ? plan[0] : null, c1 = ch.length === 1 ? ch[0] : null;
+      if ((p1 && !canEditEntry(p1)) || (c1 && !canEditEntry(c1))) { S.msg = { where: "entry", cls: "err", text: "Эти суммы может исправить только владелец." }; render(true); return; }
+      const cur = c1 ? c1.cur : "CNY";
+      S.form = { ctx: "deal", mode: "new", kind: "sums", action: a.id, uid: S.open.uid, orderId: S.open.id, sup: p1 ? inNum(p1.amount, 2) : "", cli: c1 ? inNum(c1.amount, 2) : "", cur, rate: c1 && cur !== "CNY" ? inNum(c1.rate) : inNum(curRate(cur)), planId: p1?.id || null, chargeId: c1?.id || null, date: (p1 || c1)?.date || today(), note: (p1 || c1)?.note || "" };
+      S.msg = null; S.pending = null; render(true);
+      setTimeout(() => document.getElementById("fs-sup")?.focus(), 30);
+      return;
+    }
+    if (a.combo) {
+      const m = dealMoney(S.open.uid, S.open.id), d = m.parts.delivery;
+      const hasCli = Object.keys(d.charge).length > 0, left = d.debt && d.debt.amount > 0.5;
+      S.form = { ctx: "deal", mode: "new", kind: "combo", action: a.id, uid: S.open.uid, orderId: S.open.id, cur: hasCli ? Object.keys(d.charge)[0] : "USD", carrier: "", client: "", date: today(), method: METHODS.expense[0], note: "", file: null,
+        payOn: hasCli && left, payCat: d.paidCny > 0 ? "Доставка · доплата" : "Доставка · полная оплата", payCur: hasCli ? Object.keys(d.charge)[0] : "USD", payAmount: "", payXr: "", payMethod: "Магазин · наличные" };
+      S.form.rate = inNum(curRate(S.form.cur));
+      if (S.form.payOn) prefillPay(S.form, m);
+      S.msg = null; S.pending = null; render(true);
+      setTimeout(() => document.getElementById("fc-carrier")?.focus(), 30);
+      return;
+    }
+    let cat = a.cat || STAGE_DEFAULT_CAT[a.kind]?.[o.status] || CATS[a.kind][0];
+    if (a.id === "payGoods") { const m = dealMoney(S.open.uid, S.open.id); const g = m.parts.goods; if (g.paidCny > 0) cat = "Товар · доплата"; else if (g.chargeCny > 0 && o.status !== "payment" && o.status !== "request") cat = "Товар · полная оплата"; }
+    if (a.id === "payDelivery") { const d = dealMoney(S.open.uid, S.open.id).parts.delivery; if (d.paidCny > 0) cat = "Доставка · доплата"; }
+    /* Счёт за доставку до Москвы выставляется в долларах */
+    const cur = a.cur || (a.kind === "charge" && cat === "Доставка до Москвы" ? "USD" : undefined);
+    openForm("deal", a.kind, cat, { action: a.id, uid: S.open.uid, orderId: S.open.id, ...(cur ? { cur } : {}) });
+    /* Расходы по Москве платим рублями в Москве */
+    if (a.kind === "expense" && cat === MSK) S.form.method = "Наличные ₽ · Москва";
+    if (a.id === "chargeMsk") { const by = dealMoney(S.open.uid, S.open.id).exp[MSK]?.by || {}; if (by.RUB > 0) S.form.amount = inNum(r2(by.RUB), 2); }
+    /* Оплата клиента: валюта по умолчанию — валюта счёта, остаток долга подставляется.
+       Депозит за товар не подставляем — его сумму вписывают сами. */
+    if (a.kind === "income") {
+      const f = S.form; const list = orderEntries(S.open.uid, S.open.id);
+      f.inv = invoiceOf(list, PART_OF[cat] || "goods");
+      if (f.inv) {
+        f.cur = f.inv.cur;
+        prefillPayment(f); /* полная оплата и доплата подставляют остаток; депозит и предоплату вписывают сами */
+      }
+    }
+    S.pending = null; render(true);
+    setTimeout(() => document.getElementById("f-amount")?.focus(), 30);
+  },
+  "open-general": () => { openForm("general", "general", CATS.general[0], { action: "general" }); render(true); setTimeout(() => document.getElementById("f-amount")?.focus(), 30); },
+  "close-form": () => { S.form = null; S.pending = null; render(true); },
+  "f-cat": (b, v) => {
+    const f = S.form; f.cat = v;
+    if (f.kind === "charge" && v === "Доставка до Москвы" && !f.amount && f.cur !== "USD") { f.cur = "USD"; f.rate = inNum(curRate("USD")); f.driver = "rate"; f.cny = ""; }
+    /* Расходы по Москве — только рубли */
+    if ((f.kind === "expense" || f.kind === "charge") && v === MSK && f.cur !== "RUB" && f.mode !== "edit") {
+      f.cur = "RUB"; f.rate = inNum(curRate("RUB")); f.driver = "rate"; f.cny = ""; f.rateOpen = false;
+      if (f.kind === "expense") f.method = "Наличные ₽ · Москва";
+    }
+    if (f.bill && !f.billTouched) setBill(f);
+    if (f.kind === "income" && f.ctx === "deal") {
+      const before = f.inv?.part;
+      f.inv = invoiceOf(orderEntries(f.uid, f.orderId), PART_OF[v] || "goods", f.mode === "edit" ? f.id : null);
+      if (f.inv && f.inv.part !== before && f.mode !== "edit") f.cur = f.inv.cur;
+      if (f.inv) {
+        const wasFull = f.full;
+        f.full = FULL_CATS.includes(v) && f.inv.remaining > 0.005;
+        if (crossNeeded(f) && !f.xr) f.xr = inNum(defaultXr(f), 4);
+        if (f.mode !== "edit" && (f.inv.part !== before || f.full !== wasFull)) { if (f.full) prefillPayment(f); else if (wasFull) f.amount = ""; }
+      }
+    }
+    render(true);
+  },
+  "f-cur": (b, v) => {
+    const f = S.form; f.cur = v; f.rate = inNum(curRate(v)); f.driver = "rate"; if (v === "CNY") f.cny = "";
+    /* Оплата клиента: способ по умолчанию под валюту (его можно поменять, список тот же, что и за товар) */
+    if (f.kind === "income") {
+      const auto = { USDT: "USDT на кошелёк · Россия", CNY: "Юани (Alipay / WeChat)" };
+      const autoVals = ["Наличные · офис TW", ...Object.values(auto)];
+      if (!f.method || autoVals.includes(f.method)) f.method = auto[v] || "Наличные · офис TW";
+    }
+    if (f.kind === "income" && f.inv) prefillPayment(f);
+    render(true); recalc(null);
+  },
+  "f-drop-receipt": () => { S.form.receipt = null; S.form.receiptType = null; render(true); },
+  "edit-entry": (b) => {
+    const [uid, id] = b.dataset.key.split("/");
+    const ctx = b.dataset.ctx;
+    const e = ctx === "general" ? S.general.find(g => g.id === id) : (S.entries.get(uid) || []).find(x => x.id === id);
+    if (!e) return;
+    const kind = ctx === "general" ? "general" : e.kind;
+    S.form = { ctx: ctx === "general" ? "general" : "deal", mode: "edit", id, uid, orderId: e.orderId, kind, cat: e.cat, cur: e.cur, amount: inNum(e.amount, 2), rate: inNum(e.rate, 6), cny: inNum(e.cny, 2), driver: "rate", date: e.date, method: e.method || "", note: e.note || "", receipt: e.receipt || null, receiptType: e.receiptType || null, file: null };
+    if (kind === "income" && ctx !== "general") {
+      const f = S.form;
+      f.inv = invoiceOf(orderEntries(uid, e.orderId), PART_OF[e.cat] || "goods", id);
+      if (f.inv && crossNeeded(f)) {
+        const ap = isFinite(e.applied) && e.applyCur === f.inv.cur ? e.applied : null;
+        f.xr = ap > 0 ? inNum(f.inv.cur === crossPair(f).big ? e.amount / ap : ap / e.amount, 4) : inNum(defaultXr(f), 4);
+      }
+    }
+    S.pending = null; S.msg = null;
+    if (ctx === "general") { S.tab = "cash"; S.open = null; }
+    else { S.tab = "deals"; S.open = { uid, id: e.orderId }; }
+    buildTabs(); render(true);
+    setTimeout(() => document.querySelector("[data-form='entry']")?.scrollIntoView({ block: "center" }), 30);
+  },
+  "delete-entry": deleteEntry,
+  "x-cur": (b, v) => { const x = S.xform; x[b.dataset.side + "Cur"] = v; xMirror(x); xRecalcHolder(x); render(true); },
+  "x-preset": (b, v) => { S.xform = newXform(v); S.msg = null; render(true); setTimeout(() => document.getElementById("x-from")?.focus(), 30); },
+  /* Кнопка у кошелька: подставить весь остаток и маршрут в Китай (или в юани с китайского USDT) */
+  "x-send": (b, v) => {
+    const by = walletBalances()[v] || {};
+    const cur = Object.entries(by).filter(([c, a]) => a > 0.005 && (WALLET[v].curs.includes(c) || v === "other")).sort((p, q) => q[1] - p[1])[0]?.[0] || WALLET[v].curs[0];
+    const x = newXform(v === "cn_usdt" ? "cny" : "send");
+    x.fromWallet = v; x.fromCur = cur;
+    if (by[cur] > 0) x.fromAmount = inNum(r2(by[cur]), 2);
+    xRecalcHolder(x);
+    xOpen(x);
+  },
+  "save-exchange": saveExchange,
+  "delete-exchange": async b => { try { await S.db.doc(b.dataset.path).delete(); } catch (e) { setStatus("Не удалилось. Попробуйте ещё раз.", true); } S.pending = null; render(true); },
+  "save-rates": saveRates,
+  "save-pct": savePct,
+  "save-sums": () => saveSums(),
+  "fs-cur": (b, v) => { const f = S.form; f.cur = v; f.rate = inNum(curRate(v)); render(true); }
+};
+
+/* ================================================================== */
+/*  Запись в базу                                                      */
+/* ================================================================== */
+async function saveDeal() {
+  const f = S.oform;
+  if (!f.client.trim()) { S.msg = { where: "deal", cls: "err", text: "Укажите имя клиента." }; render(true); return; }
+  if (!(f.clientCode || "").trim()) { S.msg = { where: "deal", cls: "err", text: "Укажите код клиента." }; render(true); return; }
+  const uid = S.isOwner ? (f.mgr || S.myId) : S.myId;
+  const code = newCode();
+  const body = { code, client: f.client.trim().slice(0, 120), clientCode: f.clientCode.trim().slice(0, 60), status: "payment", closedDate: null, moscowDate: null, createdBy: S.myId, createdAt: Date.now(), updatedAt: Date.now() };
+  try {
+    await S.db.doc(`deals/${uid}/orders/${code}`).set(body);
+    S.oform = null; S.msg = null; S.open = { uid, id: code }; render(true); window.scrollTo(0, 0);
+    /* Сразу открываем первый пункт: сумма поставщика и сумма клиенту */
+    setTimeout(() => HANDLERS["open-form"](null, "sums"), 60);
+  } catch (e) { S.msg = { where: "deal", cls: "err", text: "Сделка не сохранилась. Проверьте интернет и попробуйте ещё раз." }; render(true); }
+}
+async function saveEditDeal() {
+  const f = S.editOrder;
+  if (!f.client.trim()) return;
+  try {
+    await S.db.doc(`deals/${S.open.uid}/orders/${S.open.id}`).update({ client: f.client.trim().slice(0, 120), clientCode: f.clientCode.trim().slice(0, 60), updatedAt: Date.now() });
+    S.editOrder = null; render(true);
+  } catch (e) { setStatus("Не сохранилось. Попробуйте ещё раз.", true); }
+}
+async function setStage(v) {
+  const { uid, id } = S.open; const o = findOrder(uid, id);
+  if (!o || o.status === v) { S.pending = null; render(true); return; }
+  const upd = { status: v, updatedAt: Date.now() };
+  upd.closedDate = v === "done" ? (o.closedDate || today()) : null;
+  /* Дата приезда в Москву — от неё считается процент менеджеру */
+  const reached = v !== "cancelled" && STAGE_IDX[v] >= STAGE_IDX.moscow;
+  upd.moscowDate = reached ? (o.moscowDate || today()) : null;
+  S.pending = null;
+  try { await S.db.doc(`deals/${uid}/orders/${id}`).update(upd); }
+  catch (e) { setStatus("Этап не сохранился. Попробуйте ещё раз.", true); }
+  render(true);
+}
+async function deleteDeal() {
+  const { uid, id } = S.open;
+  const list = orderEntries(uid, id);
+  try {
+    for (const e of list) {
+      await S.db.doc(`deals/${uid}/entries/${e.id}`).delete();
+      if (e.receipt && S.assets) S.assets.delete(e.receipt).catch(() => {});
+    }
+    await S.db.doc(`deals/${uid}/orders/${id}`).delete();
+    S.open = null; S.pending = null; render(true);
+  } catch (e) { setStatus("Сделка удалилась не полностью. Попробуйте ещё раз.", true); }
+}
+async function saveEntry() {
+  const f = S.form;
+  const fail = t => { S.msg = { where: "form", cls: "err", text: t }; render(true); };
+  const amount = num(f.amount);
+  if (!f.cat) return fail("Выберите, за что.");
+  if (!(amount > 0)) return fail("Введите сумму больше нуля.");
+  let rate = 1, cny = amount, applied = null;
+  if (crossNeeded(f)) {
+    /* Оплата в другой валюте, чем счёт: засчитываем по кросс-курсу, в юани — по текущему курсу */
+    if (!(num(f.xr) > 0)) return fail("Укажите курс, по которому клиент платит.");
+    applied = toApplied(f, amount);
+    if (f.cur !== "CNY") {
+      rate = curRate(f.cur);
+      cny = rate > 0 ? toCny(amount, f.cur, rate) : applied * f.inv.k;
+      if (!(rate > 0)) rate = rateFrom(amount, f.cur, cny);
+    }
+  } else if (f.cur !== "CNY") {
+    rate = num(f.rate); cny = num(f.cny);
+    if (!(rate > 0) && cny > 0) rate = rateFrom(amount, f.cur, cny);
+    if (!(rate > 0)) return fail("Укажите курс или сколько юаней получили.");
+    cny = toCny(amount, f.cur, rate);
+  }
+  if (f.kind === "income" && f.inv && applied == null) applied = amount;
+  if (!f.date) return fail("Укажите дату.");
+  if (canBill(f) && f.cat === MSK && f.bill == null) return fail("Выберите, кто оплачивает расходы по Москве: клиент или мы.");
+  if (canBill(f) && f.bill && !(num(f.billAmount) > 0)) return fail("Укажите, сколько выставить клиенту.");
+  const btn = document.getElementById("f-save"); if (btn) btn.disabled = true;
+  const body = { kind: f.kind === "general" ? "general" : f.kind, cat: f.cat, amount: r2(amount), cur: f.cur, rate: +rate.toFixed(6), cny: r2(cny), date: f.date, method: f.kind === "charge" || f.kind === "plan" ? null : f.method, note: f.note.trim().slice(0, 300), receipt: f.receipt || null, receiptType: f.receiptType || null, applied: applied != null && isFinite(applied) ? r2(applied) : null, applyCur: applied != null && f.inv ? f.inv.cur : null, updatedAt: Date.now() };
+  if (f.ctx === "deal") body.orderId = f.orderId;
+  try {
+    if (f.file && S.assets) {
+      if (f.file.size > 20 * 1024 * 1024) return fail("Файл больше 20 МБ. Сделайте скриншот и прикрепите его.");
+      try {
+        const up = await S.assets.upload(f.file);
+        body.receipt = up.id; body.receiptType = up.contentType;
+      } catch (err) {
+        if (btn) btn.disabled = false;
+        return fail(err?.code === "unsupported_type" ? "Такой формат не поддерживается. Прикрепите JPG, PNG или PDF." : "Чек не загрузился. Попробуйте ещё раз или сохраните без чека.");
+      }
+    }
+    const col = f.ctx === "general" ? "company/main/general" : `deals/${f.uid}/entries`;
+    if (f.mode === "edit") await S.db.doc(`${col}/${f.id}`).update(body);
+    else {
+      body.createdBy = S.myId; body.createdAt = Date.now(); await S.db.collection(col).doc().set(body);
+      /* Образец или прочий расход на товар выставлен клиенту — добавляем к счёту за товар.
+         Расходы по Москве, которые оплачивает клиент, — отдельный счёт «Расходы по Москве» в рублях */
+      if (canBill(f) && f.bill && num(f.billAmount) > 0) {
+        const ba = num(f.billAmount), bc = f.billCur;
+        let br = bc === "CNY" ? 1 : (sameMoney(bc, f.cur) ? body.rate : (curRate(bc) > 0 ? curRate(bc) : NaN));
+        if (!(br > 0)) br = rateFrom(ba, bc, body.cny); /* курса нет — считаем, что выставили по стоимости расхода */
+        const isMsk = f.cat === MSK;
+        await S.db.collection(col).doc().set({ orderId: f.orderId, kind: "charge", cat: isMsk ? MSK : f.cat === "Образец" ? "Образец" : "Товар", amount: r2(ba), cur: bc, rate: +br.toFixed(6), cny: r2(toCny(ba, bc, br)), date: f.date, method: null, note: (isMsk ? body.note : `выставлено за: ${f.cat.toLowerCase()}${body.note ? " · " + body.note : ""}`).slice(0, 300), receipt: null, receiptType: null, createdBy: S.myId, createdAt: Date.now(), updatedAt: Date.now() });
+      }
+    }
+    const billed = f.mode !== "edit" && canBill(f) ? (f.bill && num(f.billAmount) > 0 ? ` · выставлено клиенту ${money(num(f.billAmount), f.billCur)}` : " · за наш счёт") : "";
+    const what = `${f.mode === "edit" ? "Изменено" : "Сохранено"}: ${f.cat}, ${money(amount, f.cur)}${billed}`;
+    S.form = null; S.pending = null; S.msg = { where: "entry", cls: "ok", text: what };
+    render(true);
+  } catch (err) {
+    fail(err?.code === "quota_exceeded" ? "База заполнена. Сообщите владельцу." : "Не сохранилось. Проверьте интернет и попробуйте ещё раз.");
+  } finally { const b2 = document.getElementById("f-save"); if (b2) b2.disabled = false; }
+}
+async function deleteEntry() {
+  const f = S.form;
+  const col = f.ctx === "general" ? "company/main/general" : `deals/${f.uid}/entries`;
+  try {
+    await S.db.doc(`${col}/${f.id}`).delete();
+    if (f.receipt && S.assets) S.assets.delete(f.receipt).catch(() => {});
+    S.form = null; S.pending = null; S.msg = { where: "entry", cls: "ok", text: "Запись удалена" }; render(true);
+  } catch (e) { S.msg = { where: "form", cls: "err", text: "Не удалилось. Попробуйте ещё раз." }; render(true); }
+}
+async function saveExchange() {
+  const x = S.xform;
+  const a = num(x.fromAmount), b = num(x.toAmount);
+  const err = t => { S.msg = { where: "x", cls: "err", text: t }; render(true); };
+  if (!(a > 0) || !(b > 0)) return err("Укажите, сколько отправили и сколько получили.");
+  if (x.fromWallet === x.toWallet && x.fromCur === x.toCur) return err("«Откуда» и «Куда» совпадают.");
+  const same = sameMoney(x.fromCur, x.toCur);
+  if (same && b > a + 0.005) return err("Получили больше, чем отправили, — проверьте суммы.");
+  if (!S.isOwner && WALLET[x.fromWallet].where !== "ru") return err("Переводить можно только из российских кошельков.");
+  const body = { fromWallet: x.fromWallet, fromAmount: r2(a), fromCur: x.fromCur, toWallet: x.toWallet, toAmount: r2(b), toCur: x.toCur, date: x.date || today(), note: x.note.trim().slice(0, 300), createdBy: S.myId, createdAt: Date.now() };
+  /* Менеджер пишет отправку в свои записи (владелец видит все), владелец — в общую кассу */
+  const col = S.isOwner ? "company/main/exchanges" : `deals/${S.myId}/transfers`;
+  try {
+    await S.db.collection(col).doc().set(body);
+    const toCn = WALLET[x.toWallet].where === "cn" && WALLET[x.fromWallet].where === "ru";
+    const leftTxt = "";
+    const head = toCn ? `Отправка в Китай сохранена: ${WALLET[x.fromWallet].name} −${money(a, x.fromCur)}, ${WALLET[x.toWallet].name} +${money(b, x.toCur)}.` : same ? `Перевод сохранён: ${WALLET[x.toWallet].name} +${money(b, x.toCur)}.` : "Обмен сохранён.";
+    if (same || !S.isOwner) { S.xform = null; S.msg = { where: "x", cls: "ok", text: head + leftTxt }; render(true); return; }
+    const upd = { ...S.rates, updatedAt: Date.now() };
+    if (x.toCur === "CNY") {
+      if (x.fromCur === "RUB") upd.rubPerCny = +(a / b).toFixed(4);
+      if (x.fromCur === "USDT") upd.cnyPerUsdt = +(b / a).toFixed(4);
+      if (x.fromCur === "USD") upd.cnyPerUsd = +(b / a).toFixed(4);
+    } else if (x.toCur === "USDT" && x.fromCur === "RUB" && S.rates.cnyPerUsdt > 0) {
+      upd.rubPerCny = +((a / b) / S.rates.cnyPerUsdt).toFixed(4);
+    }
+    await S.db.doc("rates/current").set(upd);
+    S.xform = null; S.msg = { where: "x", cls: "ok", text: head + " Курс обновлён." + leftTxt }; render(true);
+  } catch (e) { S.msg = { where: "x", cls: "err", text: "Не сохранилось. Попробуйте ещё раз." }; render(true); }
+}
+/* Курс рубля к юаню считается сам: (₽ за 1 USDT) ÷ (¥ за 1 USDT) */
+function rubCalcText(v) {
+  if (!(v > 0)) return `<span class="muted">Курс рубля к юаню посчитается сам, когда впишете оба курса USDT.</span>`;
+  return `Курс рубля к юаню: <b>1 ¥ = ${inNum(v, 4)} ₽</b> — считается сам.${v > 30 ? ` <b class="neg">Похоже на курс доллара, а не юаня — проверьте.</b>` : ""}`;
+}
+async function saveRates() {
+  const rubUsdt = num(document.getElementById("r-rubusdt").value), usdt = num(document.getElementById("r-usdt").value), usd = num(document.getElementById("r-usd").value);
+  const rub = rubUsdt > 0 && usdt > 0 ? rubUsdt / usdt : NaN;
+  if (rub > 30) { S.msg = { where: "rates", cls: "err", text: "Юань выходит дороже 30 ₽ — проверьте: «1 USDT = ? ¥» — это юани за USDT (около 7)." }; render(true); return; }
+  const upd = { updatedAt: Date.now() };
+  if (rub > 0) upd.rubPerCny = rub; if (usdt > 0) upd.cnyPerUsdt = usdt; if (usd > 0) upd.cnyPerUsd = usd;
+  if (Object.keys(upd).length < 2) { S.msg = { where: "rates", cls: "err", text: "Укажите хотя бы один курс." }; render(true); return; }
+  try { await S.db.doc("rates/current").set({ ...S.rates, ...upd }); S.msg = { where: "rates", cls: "ok", text: "Сохранено" }; }
+  catch (e) { S.msg = { where: "rates", cls: "err", text: "Не сохранилось. Попробуйте ещё раз." }; }
+  render(true);
+}
+async function savePct() {
+  const v = num(document.getElementById("pct-all").value);
+  if (!(v >= 0 && v <= 100)) { S.msg = { where: "pct", cls: "err", text: "Процент от 0 до 100." }; render(true); return; }
+  try { await S.db.doc("rates/current").set({ ...S.rates, bonusPct: v, updatedAt: S.rates.updatedAt || Date.now() }); S.msg = { where: "pct", cls: "ok", text: `Сохранено: ${nf.format(v)}% для всех менеджеров` }; }
+  catch (e) { S.msg = { where: "pct", cls: "err", text: "Не сохранилось. Попробуйте ещё раз." }; }
+  render(true);
+}
+
+boot().catch(() => gate("Что-то пошло не так", "Обновите страницу. Если не поможет, напишите, что видите на экране."));
+</script>

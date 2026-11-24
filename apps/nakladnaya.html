@@ -1,0 +1,473 @@
+<title>Накладная Trust Way</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: form on the left (what you type, incl. a private "for you" block), the client-facing invoice sheet on the right; stacks form-first on phones. */
+:root {
+  --bg: #eef0f6;
+  --surface: #ffffff;
+  --surface-2: #f5f6fb;
+  --fg: #141a33;
+  --muted: #5a6283;
+  --line: #d5d9e8;
+  --accent: #26369a;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e7f8;
+  --pos: #1c7448;
+  --neg: #b3261e;
+  --private: #fbf3e2;
+  --private-line: #e6cf9c;
+  /* the sheet is paper: same colours in both themes */
+  --paper: #ffffff;
+  --paper-ink: #111111;
+  --paper-muted: #555555;
+  --paper-fill: #f2f2f2;
+  --display: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  --ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1020; --surface: #161a2e; --surface-2: #1b2036; --fg: #e8eaf4; --muted: #9aa1c2;
+    --line: #2a3050; --accent: #9aa6ff; --accent-ink: #0d1020; --accent-soft: #232a4d;
+    --pos: #5ccb8f; --neg: #ff8a80; --private: #2a2416; --private-line: #5c4a22; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1020; --surface: #161a2e; --surface-2: #1b2036; --fg: #e8eaf4; --muted: #9aa1c2;
+  --line: #2a3050; --accent: #9aa6ff; --accent-ink: #0d1020; --accent-soft: #232a4d;
+  --pos: #5ccb8f; --neg: #ff8a80; --private: #2a2416; --private-line: #5c4a22; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+  font-variant-numeric: tabular-nums;
+}
+.app { max-width: 1320px; margin: 0 auto; display: grid; gap: 16px; }
+.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.top h1 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+.top .sub { color: var(--muted); font-size: 14px; }
+.spacer { flex: 1; }
+.btn { font: inherit; font-weight: 600; font-size: 14px; padding: 9px 15px; border-radius: 10px; border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .seg button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.status { font-size: 13.5px; }
+.status.ok { color: var(--pos); } .status.err { color: var(--neg); }
+
+.layout { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1080px) { .layout { grid-template-columns: minmax(0, 440px) minmax(0, 1fr); } .sheet-col { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); } }
+
+/* ---------- form ---------- */
+.form { display: grid; gap: 12px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+.card h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.card.private { background: var(--private); border-color: var(--private-line); }
+.card.private h2 { color: var(--fg); }
+.grid2 { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid3 { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 420px) { .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.f { display: grid; gap: 4px; min-width: 0; }
+.f.wide { grid-column: 1 / -1; }
+.f label, .f .lbl { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+input, select, textarea { font: inherit; font-size: 15px; width: 100%; min-width: 0; padding: 8px 10px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--fg); }
+textarea { resize: vertical; min-height: 96px; line-height: 1.4; }
+.hint { font-size: 12px; color: var(--muted); }
+.seg { justify-self: start; display: inline-flex; border: 1.5px solid var(--line); border-radius: 9px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13.5px; border: 0; background: var(--surface-2); color: var(--fg); padding: 7px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.calc { display: grid; gap: 4px; font-size: 14px; }
+.calc .row { display: flex; justify-content: space-between; gap: 10px; }
+.calc .row b { font-weight: 600; }
+.calc .big { font-size: 16px; padding-top: 6px; border-top: 1px dashed var(--private-line); }
+.pos { color: var(--pos); } .neg { color: var(--neg); }
+
+/* ---------- sheet (client document) ---------- */
+.sheet-col { min-width: 0; display: grid; gap: 10px; }
+.sheet-wrap { width: 100%; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(20,26,51,.10); background: var(--paper); }
+.sheet-scale { transform-origin: top left; width: 780px; }
+/* Строгий бланк: чёрно-белый, тонкие линии, без заливок цветом */
+.doc { width: 780px; background: var(--paper); color: var(--paper-ink); font-family: var(--ui); font-size: 12.5px; line-height: 1.35; padding: 34px 36px 30px; }
+.doc .co { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--paper-ink); }
+.doc .co .name { font-weight: 700; font-size: 15px; letter-spacing: .12em; }
+.doc .co .tag { font-size: 11px; color: var(--paper-muted); margin-top: 2px; }
+.doc .co .ct { font-size: 11px; color: var(--paper-muted); text-align: right; white-space: pre-line; }
+.doc .title { text-align: center; margin: 22px 0 18px; }
+.doc .title .t { font-size: 17px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.doc .title .d { font-size: 12px; color: var(--paper-muted); margin-top: 4px; }
+.doc .sec { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin: 16px 0 6px; }
+.doc table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.doc td, .doc th { border: 1px solid var(--paper-ink); padding: 6px 8px; vertical-align: middle; overflow-wrap: anywhere; }
+.doc .info td.k { width: 19%; background: var(--paper-fill); font-size: 11px; }
+.doc .info td.v { width: 31%; font-weight: 600; font-size: 12.5px; }
+.doc .cargo th { background: var(--paper-fill); font-weight: 600; font-size: 10.5px; text-align: center; line-height: 1.25; }
+.doc .cargo td { text-align: right; font-size: 12.5px; }
+.doc .cargo td.name { text-align: left; }
+.doc .cargo td.c { text-align: center; }
+.doc .cargo td.hl { font-weight: 700; }
+.doc .total { margin-top: -1px; width: 100%; border-collapse: collapse; }
+.doc .total td { border: 1px solid var(--paper-ink); padding: 8px; }
+.doc .total td.t { text-align: right; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+.doc .total td.v { width: 14.2857%; text-align: right; font-weight: 700; font-size: 15px; border-top: 2px solid var(--paper-ink); }
+.doc .words { margin-top: 8px; font-size: 12px; }
+.doc .words b { font-weight: 600; }
+.doc .alt { margin-top: 3px; font-size: 11.5px; color: var(--paper-muted); }
+.doc .notes { margin-top: 6px; border: 1px solid var(--paper-ink); padding: 8px 10px; white-space: pre-wrap; font-size: 11.5px; }
+.doc .sign { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; font-size: 11.5px; }
+.doc .sign .r { display: grid; gap: 4px; }
+.doc .sign .line { border-bottom: 1px solid var(--paper-ink); height: 22px; }
+.doc .sign .cap { font-size: 10px; color: var(--paper-muted); display: flex; justify-content: space-between; }
+.offscreen { position: fixed; left: -10000px; top: 0; }
+@media (prefers-reduced-motion: no-preference) { .btn, .seg button { transition: background .12s, color .12s; } }
+</style>
+
+<div class="app">
+  <div class="top">
+    <h1>Накладная Trust Way</h1>
+    <span class="spacer"></span>
+    <button class="btn ghost" id="b-new" type="button">Новая накладная</button>
+    <button class="btn ghost" id="b-png" type="button" hidden>Скачать картинку</button>
+    <button class="btn ghost" id="b-pdf" type="button" hidden>Скачать PDF</button>
+    <button class="btn" id="b-xlsx" type="button" hidden>Скачать Excel</button>
+    <span class="status" id="status" role="status"></span>
+  </div>
+
+  <div class="layout">
+    <form class="form" id="form" novalidate>
+      <section class="card">
+        <h2>Накладная</h2>
+        <div class="grid2">
+          <div class="f"><label for="no">Номер накладной</label><input id="no" autocomplete="off"></div>
+          <div class="f"><label for="date">Дата отправки</label><input id="date" type="date"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Получатель и маршрут</h2>
+        <div class="grid2">
+          <div class="f"><label for="client">Получатель</label><input id="client" autocomplete="off" placeholder="Имя клиента"></div>
+          <div class="f"><label for="code">Код клиента</label><input id="code" autocomplete="off"></div>
+          <div class="f"><label for="phone">Телефон получателя</label><input id="phone" autocomplete="off"></div>
+          <div class="f"><label for="transport">Вид транспорта</label><select id="transport"><option>Авто</option><option>Авиа</option><option>Ж/Д</option></select></div>
+          <div class="f"><label for="from">Пункт отправки</label><input id="from" autocomplete="off"></div>
+          <div class="f"><label for="to">Пункт назначения</label><input id="to" autocomplete="off"></div>
+          <div class="f wide"><label for="term">Срок доставки</label><input id="term" autocomplete="off"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Груз</h2>
+        <div class="grid3">
+          <div class="f wide"><label for="goods">Наименование товара</label><input id="goods" autocomplete="off"></div>
+          <div class="f"><label for="places">Мест</label><input id="places" inputmode="numeric" autocomplete="off"></div>
+          <div class="f"><label for="weight">Вес, кг</label><input id="weight" inputmode="decimal" autocomplete="off"></div>
+          <div class="f"><label for="volume">Объём, м³</label><input id="volume" inputmode="decimal" autocomplete="off"></div>
+        </div>
+        <span class="hint" id="density-hint"></span>
+      </section>
+
+      <section class="card">
+        <h2>Расчёт для клиента</h2>
+        <div class="f"><span class="lbl">Перевозку считаем</span>
+          <div class="seg" role="group" aria-label="Как считать перевозку"><button type="button" data-basis="kg" aria-pressed="true">за кг</button><button type="button" data-basis="m3" aria-pressed="false">за м³</button></div>
+        </div>
+        <div class="grid2">
+          <div class="f"><label for="crate" id="crate-l">Ставка перевозчика, $ за кг</label><input id="crate" inputmode="decimal" autocomplete="off"></div>
+          <div class="f"><label for="pct">Ваш процент, %</label><input id="pct" inputmode="decimal" autocomplete="off"></div>
+        </div>
+        <span class="hint" id="rate-hint"></span>
+        <div class="grid3">
+          <div class="f"><label for="value">Стоимость груза, $</label><input id="value" inputmode="decimal" autocomplete="off"></div>
+          <div class="f"><label for="ins">Страховка, %</label><input id="ins" inputmode="decimal" autocomplete="off"></div>
+          <div class="f"><label for="pack">Упаковка, $</label><input id="pack" inputmode="decimal" autocomplete="off"></div>
+          <div class="f"><label for="adv">Авансовые средства, $</label><input id="adv" inputmode="decimal" autocomplete="off"></div>
+          <div class="f"><label for="other">Другие расходы, $</label><input id="other" inputmode="decimal" autocomplete="off"></div>
+        </div>
+        <label class="check"><input type="checkbox" id="pct-ins"> Ваш процент и на страховку</label>
+        <div class="grid2">
+          <div class="f"><label for="rub">Курс для клиента, ₽ за $</label><input id="rub" inputmode="decimal" autocomplete="off" placeholder="не показывать"></div>
+          <div class="f"><label for="cny">Курс для клиента, ¥ за $</label><input id="cny" inputmode="decimal" autocomplete="off" placeholder="не показывать"></div>
+        </div>
+        <span class="hint">Если вписать курс, под итогом в накладной появится сумма в рублях или юанях.</span>
+      </section>
+
+      <section class="card private" aria-labelledby="priv-h">
+        <h2 id="priv-h">Только для вас — в накладную не попадает</h2>
+        <div class="grid2">
+          <div class="f"><label for="cother">Прочее у перевозчика, $</label><input id="cother" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+          <div class="f"><label for="ourpack">Упаковка — ваш расход, $</label><input id="ourpack" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+        </div>
+        <div class="calc" id="calc"></div>
+      </section>
+
+      <section class="card">
+        <h2>Примечание в накладной</h2>
+        <div class="f"><label for="notes" class="hint">Условия для клиента — можно поменять</label><textarea id="notes"></textarea></div>
+        <div class="f"><label for="contacts">Контакты Trust Way внизу накладной</label><input id="contacts" autocomplete="off" placeholder="Например: WhatsApp +86 …"></div>
+      </section>
+    </form>
+
+    <div class="sheet-col">
+      <div class="sheet-wrap" id="sheet-wrap"><div class="sheet-scale" id="sheet-scale"><div class="doc" id="doc"></div></div></div>
+      <span class="hint">Так накладную увидит клиент. Ставка перевозчика и ваш процент в ней не показываются.</span>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script>
+/* ---------- данные ---------- */
+const FIELDS = ["no","date","client","code","phone","transport","from","to","term","goods","places","weight","volume","crate","pct","value","ins","pack","adv","other","rub","cny","cother","ourpack","notes","contacts"];
+const NOTES = "Проверьте накладную в течение 3 дней: если есть ошибка в цене или страховке, напишите своему менеджеру. После этого накладная считается согласованной.\nГруз нужно забрать или перегрузить в день прибытия в Москву. За хранение на складе платит получатель.";
+function todayISO() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
+function newNo() { const d = new Date(); return `TW-${String(d.getFullYear()).slice(2)}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}-01`; }
+/* Каждая посылка вносится заново: номер, дата и данные груза пустые. Телефон получателя по умолчанию — +79883011313 */
+const PHONE = "+79883011313";
+const BLANK = () => ({ no: "", date: "", client: "", code: "", phone: PHONE, transport: "Авто", from: "Шэньчжэнь", to: "Москва", term: "15–20 дней",
+  goods: "", places: "", weight: "", volume: "", crate: "", pct: "10", value: "", ins: "2", pack: "0", adv: "0", other: "0", rub: "", cny: "", cother: "0", ourpack: "0", notes: NOTES, contacts: "", basis: "kg", pctIns: false, sample: false });
+let S = load() || BLANK();
+
+function load() { try { const v = JSON.parse(localStorage.getItem("tw-invoice-v2") || "null"); return v && typeof v === "object" ? v : null; } catch (e) { return null; } }
+function save() { try { localStorage.setItem("tw-invoice-v2", JSON.stringify(S)); } catch (e) {} }
+
+/* ---------- числа ---------- */
+function num(s) { const v = parseFloat(String(s ?? "").replace(/\s/g, "").replace(",", ".")); return isFinite(v) ? v : 0; }
+const r2 = n => Math.round(n * 100) / 100;
+const nf2 = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const nfa = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 });
+const usd = n => `$${nf2.format(n)}`;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function fmtDate(iso) { if (!iso) return "—"; const [y, m, d] = iso.split("-"); return `${d}.${m}.${y}`; }
+
+/* Ставка клиенту = ставка перевозчика + ваш процент. Перевозка = вес (или объём) × ставка. */
+function calc() {
+  const w = num(S.weight), v = num(S.volume), pct = num(S.pct);
+  const qty = S.basis === "m3" ? v : w;
+  const crate = num(S.crate), rate = r2(crate * (1 + pct / 100));
+  const freight = r2(qty * rate), cFreight = r2(qty * crate);
+  const value = num(S.value), insPct = num(S.ins);
+  const cIns = r2(value * insPct / 100);
+  const ins = S.pctIns ? r2(cIns * (1 + pct / 100)) : cIns;
+  const pack = num(S.pack), adv = num(S.adv), other = num(S.other);
+  const total = r2(freight + ins + pack + adv + other);
+  const carrier = r2(cFreight + cIns + adv + other + num(S.cother));
+  const profit = r2(total - carrier - num(S.ourpack));
+  return { w, v, qty, density: v > 0 ? w / v : 0, crate, rate, freight, cFreight, value, insPct, ins, cIns, pack, adv, other, total, carrier, profit };
+}
+
+/* ---------- накладная ---------- */
+/* Сумма прописью: «одна тысяча триста девяносто один доллар США 62 цента» */
+function words(n) {
+  const u = ["", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"], uf = ["", "одна", "две"];
+  const t = ["десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать"];
+  const d = ["", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"];
+  const h = ["", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"];
+  const plural = (x, f) => { const a = x % 100, b = x % 10; return a > 10 && a < 20 ? f[2] : b === 1 ? f[0] : b > 1 && b < 5 ? f[1] : f[2]; };
+  const tri = (x, fem) => { const r = []; r.push(h[Math.floor(x / 100)]); const y = x % 100; if (y >= 10 && y < 20) r.push(t[y - 10]); else { r.push(d[Math.floor(y / 10)]); const z = y % 10; r.push(fem && z < 3 ? uf[z] : u[z]); } return r.filter(Boolean).join(" "); };
+  const whole = Math.floor(n + 1e-9), cents = Math.round((n - whole) * 100);
+  const parts = []; const mln = Math.floor(whole / 1e6), th = Math.floor(whole / 1000) % 1000, rest = whole % 1000;
+  if (mln) parts.push(tri(mln) + " " + plural(mln, ["миллион", "миллиона", "миллионов"]));
+  if (th) parts.push(tri(th, true) + " " + plural(th, ["тысяча", "тысячи", "тысяч"]));
+  if (rest || !whole) parts.push(rest ? tri(rest) : "ноль");
+  const s = parts.join(" ");
+  return `${s.charAt(0).toUpperCase() + s.slice(1)} ${plural(whole, ["доллар", "доллара", "долларов"])} США ${String(cents).padStart(2, "0")} ${plural(cents, ["цент", "цента", "центов"])}`;
+}
+function docHtml(c) {
+  const unit = S.basis === "m3" ? "м³" : "кг";
+  const alt = [num(S.rub) > 0 ? `${nfa.format(Math.round(c.total * num(S.rub)))} ₽ по курсу ${nfa.format(num(S.rub))} ₽ за $` : "", num(S.cny) > 0 ? `${nf2.format(c.total * num(S.cny))} ¥ по курсу ${nfa.format(num(S.cny))} ¥ за $` : ""].filter(Boolean).join("; ");
+  const recipient = [S.client, S.code ? `код ${S.code}` : ""].filter(Boolean).join(", ");
+  return `
+  <div class="co"><div><div class="name">TRUST WAY</div><div class="tag">Карго из Китая в Россию</div></div><div class="ct">${esc(S.contacts || "")}</div></div>
+  <div class="title"><div class="t">Накладная № ${esc(S.no || "")}</div>${S.date ? `<div class="d">от ${fmtDate(S.date)}</div>` : ""}</div>
+  <div class="sec">1. Стороны и маршрут</div>
+  <table class="info"><tbody>
+    <tr><td class="k">Отправитель</td><td class="v">Trust Way</td><td class="k">Получатель</td><td class="v">${esc(recipient || "—")}</td></tr>
+    <tr><td class="k">Пункт отправки</td><td class="v">${esc(S.from || "—")}</td><td class="k">Пункт назначения</td><td class="v">${esc(S.to || "—")}</td></tr>
+    <tr><td class="k">Дата отправки</td><td class="v">${fmtDate(S.date)}</td><td class="k">Телефон получателя</td><td class="v">${esc(S.phone || "—")}</td></tr>
+    <tr><td class="k">Вид транспорта</td><td class="v">${esc(S.transport)}</td><td class="k">Срок доставки</td><td class="v">${esc(S.term || "—")}</td></tr>
+  </tbody></table>
+  <div class="sec">2. Груз</div>
+  <table class="cargo"><thead><tr>
+    <th style="width:26%">Наименование товара</th><th>Кол-во мест</th><th>Вес, кг</th><th>Объём, м³</th><th>Плотность, кг/м³</th><th>Ставка, $ за ${unit}</th><th>Перевозка, $</th>
+  </tr></thead><tbody><tr>
+    <td class="name">${esc(S.goods || "—")}</td><td class="c">${esc(S.places || "—")}</td><td>${c.w ? nfa.format(c.w) : "—"}</td><td>${c.v ? nf2.format(c.v) : "—"}</td><td>${c.density ? nf2.format(c.density) : "—"}</td><td>${c.rate ? nf2.format(c.rate) : "—"}</td><td class="hl">${nf2.format(c.freight)}</td>
+  </tr></tbody></table>
+  <div class="sec">3. Расчёт</div>
+  <table class="cargo"><thead><tr>
+    <th>Стоимость груза, $</th><th>Страховка, %</th><th>Страховка, $</th><th>Упаковка, $</th><th>Авансовые средства, $</th><th>Другие расходы, $</th><th>Сумма, $</th>
+  </tr></thead><tbody><tr>
+    <td>${c.value ? nf2.format(c.value) : "—"}</td><td class="c">${nfa.format(c.insPct)}</td><td>${nf2.format(c.ins)}</td><td>${nf2.format(c.pack)}</td><td>${nf2.format(c.adv)}</td><td>${nf2.format(c.other)}</td><td class="hl">${nf2.format(c.total)}</td>
+  </tr></tbody></table>
+  <table class="total"><tbody><tr><td class="t">Итого к оплате, $</td><td class="v">${nf2.format(c.total)}</td></tr></tbody></table>
+  <div class="words">Сумма прописью: <b>${esc(words(c.total))}</b></div>
+  ${alt ? `<div class="alt">При оплате в другой валюте: ${esc(alt)}</div>` : ""}
+  <div class="sec">Примечание</div>
+  <div class="notes">${esc(S.notes)}</div>
+  <div class="sign">
+    <div class="r"><span>Отправитель: Trust Way</span><div class="line"></div><div class="cap"><span>подпись</span><span>расшифровка</span></div></div>
+    <div class="r"><span>Получатель${S.client ? ": " + esc(S.client) : ""}</span><div class="line"></div><div class="cap"><span>подпись</span><span>расшифровка</span></div></div>
+  </div>`;
+}
+
+/* ---------- отрисовка ---------- */
+const $ = id => document.getElementById(id);
+function renderForm() {
+  for (const k of FIELDS) { const el = $(k); if (el && el.value !== (S[k] ?? "")) el.value = S[k] ?? ""; }
+  $("pct-ins").checked = !!S.pctIns;
+  document.querySelectorAll("[data-basis]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.basis === S.basis)));
+}
+function render() {
+  const c = calc();
+  const unit = S.basis === "m3" ? "м³" : "кг";
+  $("crate-l").textContent = `Ставка перевозчика, $ за ${unit}`;
+  $("density-hint").textContent = c.density ? `Плотность: ${nf2.format(c.density)} кг/м³` : "Плотность посчитается из веса и объёма.";
+  $("rate-hint").textContent = c.crate ? `Ставка для клиента: $${nf2.format(c.rate)} за ${unit} · перевозка ${usd(c.freight)}` : "Впишите ставку перевозчика — ставка для клиента посчитается с вашим процентом.";
+  $("calc").innerHTML = `
+    <div class="row"><span>Клиенту по накладной</span><b>${usd(c.total)}</b></div>
+    <div class="row"><span>Перевозчику</span><b>${usd(c.carrier)}</b></div>
+    ${num(S.ourpack) ? `<div class="row"><span>Ваша упаковка</span><b>${usd(num(S.ourpack))}</b></div>` : ""}
+    <div class="row big"><span>Ваш доход</span><b class="${c.profit >= 0 ? "pos" : "neg"}">${usd(c.profit)}</b></div>`;
+  $("doc").innerHTML = docHtml(c);
+  fit();
+}
+function fit() {
+  const wrap = $("sheet-wrap"), sc = $("sheet-scale");
+  const k = Math.min(1, wrap.clientWidth / 780);
+  sc.style.transform = `scale(${k})`;
+  wrap.style.height = `${Math.ceil($("doc").offsetHeight * k)}px`;
+}
+
+/* ---------- события ---------- */
+$("form").addEventListener("input", e => {
+  const t = e.target;
+  if (t.id === "pct-ins") S.pctIns = t.checked;
+  else if (FIELDS.includes(t.id)) S[t.id] = t.value;
+  S.sample = false;
+  save(); render();
+});
+$("form").addEventListener("change", e => { if (e.target.id === "pct-ins") { S.pctIns = e.target.checked; save(); render(); } });
+$("form").addEventListener("submit", e => e.preventDefault());
+document.querySelectorAll("[data-basis]").forEach(b => b.addEventListener("click", () => { S.basis = b.dataset.basis; renderForm(); save(); render(); }));
+$("b-new").addEventListener("click", () => {
+  /* Новая накладная: маршрут, условия, курсы и контакты остаются, груз и получатель — пустые */
+  const keep = { phone: S.phone || PHONE, from: S.from, to: S.to, term: S.term, transport: S.transport, pct: S.pct, ins: S.ins, rub: S.rub, cny: S.cny, notes: S.notes, contacts: S.contacts, basis: S.basis };
+  S = { ...BLANK(), ...keep }; save(); renderForm(); render(); setStatus("");
+  $("client").focus();
+});
+window.addEventListener("resize", fit);
+
+/* ---------- скачать ---------- */
+function setStatus(t, cls) { const el = $("status"); el.textContent = t; el.className = "status" + (cls ? " " + cls : ""); }
+async function shot() {
+  await document.fonts.ready;
+  const clone = $("doc").cloneNode(true); clone.id = "";
+  const box = document.createElement("div"); box.className = "offscreen"; box.appendChild(clone); document.body.appendChild(box);
+  try { return await html2canvas(clone, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false }); }
+  finally { box.remove(); }
+}
+function fileBase() { return `Накладная ${(S.no || "Trust Way").replace(/[\\/:*?"<>|]/g, "-")}`; }
+let downloads = null;
+/* Excel: та же накладная листом — с формулами для плотности, перевозки и итога. Ставка перевозчика и процент в файл не попадают. */
+async function buildXlsx() {
+  const c = calc(), unit = S.basis === "m3" ? "м³" : "кг";
+  const wb = new ExcelJS.Workbook(); wb.creator = "Trust Way";
+  const ws = wb.addWorksheet("Накладная", { pageSetup: { paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.2, footer: 0.2 } }, views: [{ showGridLines: false }] });
+  ws.columns = [{ width: 26 }, { width: 12 }, { width: 12 }, { width: 13 }, { width: 14 }, { width: 13 }, { width: 15 }];
+  const INK = "FF111111", MUTED = "FF555555", FILL = "FFF2F2F2", F = "Arial";
+  const thin = { style: "thin", color: { argb: INK } }, box = { top: thin, left: thin, bottom: thin, right: thin };
+  const cell = (ref, value, o = {}) => { const x = ws.getCell(ref); x.value = value; x.font = { name: F, size: o.size || 10, bold: !!o.bold, color: { argb: o.muted ? MUTED : INK } }; if (o.fill) x.fill = { type: "pattern", pattern: "solid", fgColor: { argb: FILL } }; if (o.border !== false) x.border = box; x.alignment = { vertical: "middle", wrapText: true, horizontal: o.align || "left" }; if (o.fmt) x.numFmt = o.fmt; return x; };
+  const merge = (range, value, o = {}) => { ws.mergeCells(range); const [a, b] = range.split(":"); const x = cell(a, value, o); if (o.border !== false) { const ca = ws.getCell(a), cb = ws.getCell(b); for (let r = ca.row; r <= cb.row; r++) for (let col = ca.col; col <= cb.col; col++) ws.getCell(r, col).border = box; } return x; };
+  const n = v => (v ? v : null);
+  const NUM = "#,##0.00";
+  merge("A1:C1", "TRUST WAY", { size: 13, bold: true, border: false });
+  merge("D1:G1", S.contacts || "", { size: 9, muted: true, align: "right", border: false });
+  merge("A2:C2", "Карго из Китая в Россию", { size: 9, muted: true, border: false });
+  for (let col = 1; col <= 7; col++) ws.getCell(2, col).border = { bottom: thin };
+  merge("A4:G4", "НАКЛАДНАЯ № " + (S.no || ""), { size: 14, bold: true, align: "center", border: false });
+  merge("A5:G5", S.date ? "от " + fmtDate(S.date) : "", { size: 10, muted: true, align: "center", border: false });
+  ws.getRow(4).height = 24;
+  merge("A7:G7", "1. СТОРОНЫ И МАРШРУТ", { size: 9, bold: true, border: false });
+  const info = [["Отправитель", "Trust Way", "Получатель", [S.client, S.code ? "код " + S.code : ""].filter(Boolean).join(", ")],
+    ["Пункт отправки", S.from, "Пункт назначения", S.to], ["Дата отправки", fmtDate(S.date), "Телефон получателя", S.phone], ["Вид транспорта", S.transport, "Срок доставки", S.term]];
+  info.forEach(([k1, v1, k2, v2], i) => { const r = 8 + i; cell("A" + r, k1, { size: 9, fill: true }); merge(`B${r}:C${r}`, v1 || "—", { bold: true }); cell("D" + r, k2, { size: 9, fill: true }); merge(`E${r}:G${r}`, v2 || "—", { bold: true }); ws.getRow(r).height = 18; });
+  merge("A13:G13", "2. ГРУЗ", { size: 9, bold: true, border: false });
+  ["Наименование товара", "Кол-во мест", "Вес, кг", "Объём, м³", "Плотность, кг/м³", `Ставка, $ за ${unit}`, "Перевозка, $"].forEach((t, i) => cell(ws.getCell(14, i + 1).address, t, { size: 8.5, bold: true, fill: true, align: "center" }));
+  ws.getRow(14).height = 28;
+  cell("A15", S.goods || "—"); cell("B15", n(num(S.places)), { align: "center" }); cell("C15", n(c.w), { align: "right", fmt: "#,##0.##" }); cell("D15", n(c.v), { align: "right", fmt: NUM });
+  cell("E15", { formula: 'IF(D15>0,C15/D15,"")', result: c.density || "" }, { align: "right", fmt: NUM });
+  cell("F15", c.rate, { align: "right", fmt: NUM });
+  cell("G15", { formula: `ROUND(${S.basis === "m3" ? "D15" : "C15"}*F15,2)`, result: c.freight }, { align: "right", fmt: NUM, bold: true });
+  ws.getRow(15).height = 20;
+  merge("A17:G17", "3. РАСЧЁТ", { size: 9, bold: true, border: false });
+  ["Стоимость груза, $", "Страховка, %", "Страховка, $", "Упаковка, $", "Авансовые средства, $", "Другие расходы, $", "Сумма, $"].forEach((t, i) => cell(ws.getCell(18, i + 1).address, t, { size: 8.5, bold: true, fill: true, align: "center" }));
+  ws.getRow(18).height = 28;
+  cell("A19", n(c.value), { align: "right", fmt: NUM }); cell("B19", c.insPct / 100, { align: "center", fmt: "0.##%" }); cell("C19", c.ins, { align: "right", fmt: NUM });
+  cell("D19", c.pack, { align: "right", fmt: NUM }); cell("E19", c.adv, { align: "right", fmt: NUM }); cell("F19", c.other, { align: "right", fmt: NUM });
+  cell("G19", { formula: "G15+C19+D19+E19+F19", result: c.total }, { align: "right", fmt: NUM, bold: true });
+  ws.getRow(19).height = 20;
+  merge("A20:F20", "ИТОГО К ОПЛАТЕ, $", { bold: true, align: "right" });
+  const tot = cell("G20", { formula: "G19", result: c.total }, { size: 12, bold: true, align: "right", fmt: NUM });
+  tot.border = { ...box, top: { style: "medium", color: { argb: INK } } };
+  ws.getRow(20).height = 22;
+  merge("A21:G21", "Сумма прописью: " + words(c.total), { size: 10, border: false });
+  const alt = [num(S.rub) > 0 ? `${nfa.format(Math.round(c.total * num(S.rub)))} ₽ по курсу ${nfa.format(num(S.rub))} ₽ за $` : "", num(S.cny) > 0 ? `${nf2.format(c.total * num(S.cny))} ¥ по курсу ${nfa.format(num(S.cny))} ¥ за $` : ""].filter(Boolean).join("; ");
+  if (alt) merge("A22:G22", "При оплате в другой валюте: " + alt, { size: 9, muted: true, border: false });
+  merge("A24:G24", "ПРИМЕЧАНИЕ", { size: 9, bold: true, border: false });
+  merge("A25:G25", S.notes || "", { size: 9 });
+  ws.getRow(25).height = Math.max(40, 14 * (String(S.notes || "").split("\n").length + 2));
+  cell("A28", "Отправитель: Trust Way", { size: 9, border: false }); merge("E28:G28", "Получатель" + (S.client ? ": " + S.client : ""), { size: 9, border: false });
+  for (const col of [1, 2, 3, 5, 6, 7]) ws.getCell(29, col).border = { bottom: thin };
+  ws.getRow(29).height = 22;
+  cell("A30", "подпись / расшифровка", { size: 8, muted: true, border: false }); cell("E30", "подпись / расшифровка", { size: 8, muted: true, border: false });
+  return await wb.xlsx.writeBuffer();
+}
+async function offer(kind) {
+  const btns = [$("b-png"), $("b-pdf"), $("b-xlsx")]; btns.forEach(b => b.disabled = true); setStatus("Готовлю файл…");
+  try {
+    let data, filename;
+    if (kind === "xlsx") {
+      data = new Blob([await buildXlsx()], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }); filename = fileBase() + ".xlsx";
+      await downloads.save({ filename, data }); setStatus("Файл сохранён", "ok"); return;
+    }
+    const canvas = await shot();
+    if (kind === "png") {
+      data = await new Promise(res => canvas.toBlob(res, "image/png")); filename = fileBase() + ".png";
+    } else {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pw = 210, margin = 10, w = pw - margin * 2, h = canvas.height * w / canvas.width;
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", margin, margin, w, h);
+      data = pdf.output("blob"); filename = fileBase() + ".pdf";
+    }
+    await downloads.save({ filename, data });
+    setStatus("Файл сохранён", "ok");
+  } catch (err) {
+    const code = err && err.code;
+    if (code === "declined") setStatus("");
+    else if (code === "rate_limited") setStatus("Подождите пару секунд и нажмите ещё раз.", "err");
+    else if (["unavailable", "not_granted", "capability_disabled", "capability_removed"].includes(code)) { setStatus("Скачивание здесь недоступно.", "err"); btns.forEach(b => b.hidden = true); }
+    else setStatus("Не получилось сделать файл. Попробуйте ещё раз.", "err");
+  } finally { btns.forEach(b => b.disabled = false); }
+}
+$("b-png").addEventListener("click", () => offer("png"));
+$("b-pdf").addEventListener("click", () => offer("pdf"));
+$("b-xlsx").addEventListener("click", () => offer("xlsx"));
+(async () => {
+  try { downloads = window.claude && typeof window.claude.use === "function" ? await window.claude.use("downloads") : null; } catch (e) { downloads = null; }
+  const ok = !!downloads && typeof window.html2canvas === "function";
+  $("b-png").hidden = !ok; $("b-pdf").hidden = !(ok && window.jspdf);
+  $("b-xlsx").hidden = !(downloads && window.ExcelJS);
+})();
+
+renderForm(); render();
+document.fonts && document.fonts.ready.then(fit);
+</script>
